@@ -1,0 +1,51 @@
+{
+  "acquired_snapshot_audited_at": "2026-10-06T12:10:06.253118+00:00",
+  "audit_status": "passed",
+  "audit_tool_version": "1",
+  "cwe_counts": {
+    "22": 268,
+    "327": 246,
+    "328": 236,
+    "330": 493,
+    "501": 126,
+    "614": 67,
+    "643": 35,
+    "78": 251,
+    "79": 455,
+    "89": 504,
+    "90": 59
+  },
+  "cwe_list": [
+    22,
+    78,
+    79,
+    89,
+    90,
+    327,
+    328,
+    330,
+    501,
+    614,
+    643
+  ],
+  "dataset_id": "owasp-benchmark-java-v1.2",
+  "declared_version": "1.2",
+  "frozen_commit": "8b67a88d73b2594570fc21150705283de884620b",
+  "ground_truth_path": "expectedresults-1.2.csv",
+  "ground_truth_sha256": "f0311c850dea7f15125113f7cfdbd7ad612d7f5951c7331584f6981b6ae2d630",
+  "head_detached": true,
+  "java_corpus_sha256": "19cef5310b3139d496d2eff74883a9072ab5372c1fec56ccbe8e4941e1c6b27f",
+  "label_counts": {
+    "false": 1325,
+    "true": 1415
+  },
+  "license": "GPL-2.0",
+  "license_sha256": "ab3fe34d3c62e3348015a4dd0128b09a5da2024d1467a478311003373c18a3f0",
+  "name": "OWASP Benchmark for Java",
+  "pom_sha256": "21527af337794bc7e5254414e70cccf9f6cb60db9501534764235ba2108ce34d",
+  "python_version": "3.14.6",
+  "source_file_count": 2740,
+  "testcase_count": 2740,
+  "upstream_url": "https://github.com/OWASP-Benchmark/BenchmarkJava.git",
+  "working_tree_clean": true
+}
