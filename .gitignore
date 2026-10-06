@@ -1,0 +1,30 @@
+docs/
+
+.agent/
+AGENTS.md
+
+# Python environments, test output, and local tool caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local runtime configuration
+.env
+
+# Java build output
+target/
+**/target/
+
+# Downloaded source datasets and disposable working checkouts
+datasets/raw/
+datasets/work/
+
+# Generated experiment evidence: preserve locally by run ID, but do not commit it
+artifacts/
+
+# Downloaded tokenizer assets
+.cache/
