@@ -4,6 +4,7 @@ from pathlib import Path
 
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from semgrep_compat import CompatError, validate_rules
+from semgrep_fixtures import FixtureError, validate_fixtures
 from semgrep_rules import InventoryError, inventory_rules
 
 
@@ -38,12 +39,25 @@ def build_parser() -> argparse.ArgumentParser:
         "validate-semgrep",
         help="Validate inventoried rules with a pinned Semgrep CE version",
     )
+
     compatibility.add_argument("--rules", type=Path, required=True)
     compatibility.add_argument("--inventory", type=Path, required=True)
     compatibility.add_argument("--run-dir", type=Path, required=True)
     compatibility.add_argument("--semgrep", required=True)
     compatibility.add_argument("--expected-version", required=True)
     compatibility.set_defaults(handler=run_semgrep_compatibility)
+
+    fixtures = rule_commands.add_parser(
+        "validate-fixtures",
+        help="Run pinned upstream Semgrep rule fixtures",
+    )
+    fixtures.add_argument("--rules", type=Path, required=True)
+    fixtures.add_argument("--inventory", type=Path, required=True)
+    fixtures.add_argument("--run-dir", type=Path, required=True)
+    fixtures.add_argument("--semgrep", required=True)
+    fixtures.add_argument("--expected-version", required=True)
+    fixtures.set_defaults(handler=run_semgrep_fixtures)
+
     return parser
 
 
@@ -60,6 +74,7 @@ def run_owasp_audit(args: argparse.Namespace) -> int:
     print(f"TESTCASES={result.testcase_count}")
     print(f"JAVA_SOURCES={result.source_file_count}")
     print(f"MANIFEST={result.manifest_path}")
+
     return 0
 
 
@@ -73,6 +88,7 @@ def run_semgrep_inventory(args: argparse.Namespace) -> int:
     print(f"SCANNED_RULES={result.scanned_rule_count}")
     print(f"CANDIDATE_RULES={result.candidate_rule_count}")
     print(f"OUTPUT={result.output_path}")
+
     return 0
 
 
@@ -93,6 +109,35 @@ def run_semgrep_compatibility(args: argparse.Namespace) -> int:
     print(f"REQUIRES_PRO={result.requires_pro_count}")
     print(f"ERRORS={result.error_count}")
     print(f"REPORT={result.report_path}")
+
+    return 0
+
+
+def run_semgrep_fixtures(args: argparse.Namespace) -> int:
+    result = validate_fixtures(
+        rules_dir=args.rules,
+        inventory_path=args.inventory,
+        run_dir=args.run_dir,
+        semgrep_executable=args.semgrep,
+        expected_version=args.expected_version,
+    )
+    print(f"FIXTURE_STATUS={result.status}")
+    print(f"SEMGREP_VERSION={result.semgrep_version}")
+    print(f"UPSTREAM_COMMIT={result.upstream_commit}")
+    print(f"RULE_FILES={result.file_count}")
+    print(f"PASSED={result.pass_count}")
+    print(f"FAILED={result.fail_count}")
+    print(f"ERRORS={result.error_count}")
+    print(
+        "COMPLETE_ANNOTATIONS="
+        f"{result.complete_annotation_count}"
+    )
+    print(
+        "INCOMPLETE_ANNOTATIONS="
+        f"{result.incomplete_annotation_count}"
+    )
+    print(f"REPORT={result.report_path}")
+
     return 0
 
 
@@ -101,10 +146,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         return args.handler(args)
-    except (AuditError, InventoryError, CompatError) as error:
-        if getattr(args, "rule_command", None) == "validate-semgrep":
+    except (AuditError, InventoryError, CompatError, FixtureError) as error:
+        rule_command = getattr(args, "rule_command", None)
+
+        if rule_command == "validate-fixtures":
+            status = "FIXTURE_STATUS=failed"
+        elif rule_command == "validate-semgrep":
             status = "COMPAT_STATUS=failed"
-        elif getattr(args, "rule_command", None):
+        elif rule_command:
             status = "INVENTORY_STATUS=failed"
         else:
             status = "AUDIT_STATUS=failed"

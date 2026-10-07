@@ -3,6 +3,7 @@ from pathlib import Path
 import main as cli
 from owasp_audit import AuditError, AuditResult
 from semgrep_compat import CompatError, CompatResult
+from semgrep_fixtures import FixtureError, FixtureResult
 from semgrep_rules import InventoryError, InventoryResult
 
 
@@ -205,3 +206,97 @@ def test_main_reports_semgrep_compatibility_failure(
     error = capsys.readouterr().err
     assert "COMPAT_STATUS=failed" in error
     assert "unexpected Semgrep version" in error
+
+
+def test_main_runs_semgrep_fixture_validation(
+    monkeypatch,
+    capsys,
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "run"
+
+    def fake_validate_fixtures(**kwargs) -> FixtureResult:
+        assert kwargs["rules_dir"] == Path("rules")
+        assert kwargs["inventory_path"] == Path(
+            "inventory.json"
+        )
+        assert kwargs["run_dir"] == run_dir
+        assert kwargs["semgrep_executable"] == "semgrep"
+        assert kwargs["expected_version"] == "1.179.0"
+        return FixtureResult(
+            status="completed",
+            semgrep_version="1.179.0",
+            upstream_commit="a" * 40,
+            file_count=48,
+            pass_count=48,
+            fail_count=0,
+            error_count=0,
+            complete_annotation_count=43,
+            incomplete_annotation_count=5,
+            report_path=str(run_dir / "fixtures.json"),
+        )
+
+    monkeypatch.setattr(
+        cli,
+        "validate_fixtures",
+        fake_validate_fixtures,
+    )
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-fixtures",
+            "--rules",
+            "rules",
+            "--inventory",
+            "inventory.json",
+            "--run-dir",
+            str(run_dir),
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "FIXTURE_STATUS=completed" in output
+    assert "PASSED=48" in output
+    assert "INCOMPLETE_ANNOTATIONS=5" in output
+
+
+def test_main_reports_semgrep_fixture_failure(
+    monkeypatch,
+    capsys,
+) -> None:
+    def fail_validation(**kwargs) -> FixtureResult:
+        raise FixtureError("fixture not found")
+
+    monkeypatch.setattr(
+        cli,
+        "validate_fixtures",
+        fail_validation,
+    )
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-fixtures",
+            "--rules",
+            "rules",
+            "--inventory",
+            "inventory.json",
+            "--run-dir",
+            "run",
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "FIXTURE_STATUS=failed" in error
+    assert "fixture not found" in error
