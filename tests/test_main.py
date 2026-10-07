@@ -3,6 +3,7 @@ from pathlib import Path
 import main as cli
 from owasp_audit import AuditError, AuditResult
 from semgrep_compat import CompatError, CompatResult
+from semgrep_controls import ControlError, ControlResult
 from semgrep_fixtures import FixtureError, FixtureResult
 from semgrep_rules import InventoryError, InventoryResult
 
@@ -300,3 +301,127 @@ def test_main_reports_semgrep_fixture_failure(
     error = capsys.readouterr().err
     assert "FIXTURE_STATUS=failed" in error
     assert "fixture not found" in error
+
+
+def test_main_runs_semgrep_control_validation(
+    monkeypatch,
+    capsys,
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "run"
+
+    def fake_validate_controls(**kwargs) -> ControlResult:
+        assert kwargs["project_root"] == Path(".")
+        assert kwargs["rules_dir"] == Path("rules")
+        assert kwargs["manifest_path"] == Path("manifest.json")
+        assert kwargs["run_dir"] == run_dir
+        assert kwargs["semgrep_executable"] == "semgrep"
+        assert kwargs["expected_version"] == "1.179.0"
+        return ControlResult(
+            status="completed",
+            semgrep_version="1.179.0",
+            upstream_commit="a" * 40,
+            control_count=5,
+            pass_count=5,
+            false_positive_count=0,
+            error_count=0,
+            report_path=str(run_dir / "controls.json"),
+        )
+
+    monkeypatch.setattr(cli, "validate_controls", fake_validate_controls)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-controls",
+            "--project-root",
+            ".",
+            "--rules",
+            "rules",
+            "--manifest",
+            "manifest.json",
+            "--run-dir",
+            str(run_dir),
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "CONTROL_STATUS=completed" in output
+    assert "PASSED=5" in output
+    assert "FALSE_POSITIVES=0" in output
+
+
+def test_main_fails_when_control_finds_false_positive(
+    monkeypatch,
+) -> None:
+    monkeypatch.setattr(
+        cli,
+        "validate_controls",
+        lambda **_: ControlResult(
+            status="completed",
+            semgrep_version="1.179.0",
+            upstream_commit="a" * 40,
+            control_count=1,
+            pass_count=0,
+            false_positive_count=1,
+            error_count=0,
+            report_path="controls.json",
+        ),
+    )
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-controls",
+            "--project-root",
+            ".",
+            "--rules",
+            "rules",
+            "--manifest",
+            "manifest.json",
+            "--run-dir",
+            "run",
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 1
+
+
+def test_main_reports_semgrep_control_failure(monkeypatch, capsys) -> None:
+    def fail_validation(**kwargs) -> ControlResult:
+        raise ControlError("fixture hash mismatch")
+
+    monkeypatch.setattr(cli, "validate_controls", fail_validation)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-controls",
+            "--project-root",
+            ".",
+            "--rules",
+            "rules",
+            "--manifest",
+            "manifest.json",
+            "--run-dir",
+            "run",
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "CONTROL_STATUS=failed" in error
+    assert "fixture hash mismatch" in error

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from semgrep_compat import CompatError, validate_rules
+from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
 from semgrep_rules import InventoryError, inventory_rules
 
@@ -57,6 +58,18 @@ def build_parser() -> argparse.ArgumentParser:
     fixtures.add_argument("--semgrep", required=True)
     fixtures.add_argument("--expected-version", required=True)
     fixtures.set_defaults(handler=run_semgrep_fixtures)
+
+    controls = rule_commands.add_parser(
+        "validate-controls",
+        help="Validate hash-pinned independent negative controls",
+    )
+    controls.add_argument("--project-root", type=Path, required=True)
+    controls.add_argument("--rules", type=Path, required=True)
+    controls.add_argument("--manifest", type=Path, required=True)
+    controls.add_argument("--run-dir", type=Path, required=True)
+    controls.add_argument("--semgrep", required=True)
+    controls.add_argument("--expected-version", required=True)
+    controls.set_defaults(handler=run_semgrep_controls)
 
     return parser
 
@@ -141,15 +154,44 @@ def run_semgrep_fixtures(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_semgrep_controls(args: argparse.Namespace) -> int:
+    result = validate_controls(
+        project_root=args.project_root,
+        rules_dir=args.rules,
+        manifest_path=args.manifest,
+        run_dir=args.run_dir,
+        semgrep_executable=args.semgrep,
+        expected_version=args.expected_version,
+    )
+    print(f"CONTROL_STATUS={result.status}")
+    print(f"SEMGREP_VERSION={result.semgrep_version}")
+    print(f"UPSTREAM_COMMIT={result.upstream_commit}")
+    print(f"CONTROLS={result.control_count}")
+    print(f"PASSED={result.pass_count}")
+    print(f"FALSE_POSITIVES={result.false_positive_count}")
+    print(f"ERRORS={result.error_count}")
+    print(f"REPORT={result.report_path}")
+
+    return int(result.false_positive_count > 0 or result.error_count > 0)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
         return args.handler(args)
-    except (AuditError, InventoryError, CompatError, FixtureError) as error:
+    except (
+        AuditError,
+        InventoryError,
+        CompatError,
+        FixtureError,
+        ControlError,
+    ) as error:
         rule_command = getattr(args, "rule_command", None)
 
-        if rule_command == "validate-fixtures":
+        if rule_command == "validate-controls":
+            status = "CONTROL_STATUS=failed"
+        elif rule_command == "validate-fixtures":
             status = "FIXTURE_STATUS=failed"
         elif rule_command == "validate-semgrep":
             status = "COMPAT_STATUS=failed"

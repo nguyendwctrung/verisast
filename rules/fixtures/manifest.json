@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "control_type": "independent_negative",
+  "semgrep_version": "1.179.0",
+  "upstream_commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
+  "controls": [
+    {
+      "control_id": "use-of-sha1-negative",
+      "rule_id": "use-of-sha1",
+      "cwes": [328],
+      "rule_path": "java/lang/security/audit/crypto/use-of-sha1.yaml",
+      "rule_sha256": "e0592e0fd0b91d960d4bd9670e0e3b9838a932d473166b98b4de1478a5c28dd6",
+      "fixture_path": "rules/fixtures/java/use-of-sha1.java",
+      "fixture_sha256": "5a28249dbba3ebfb0da871f901677f5950bcbbee40a7a3a08ee8d2ee9d69a583",
+      "expected_findings": 0,
+      "rationale": "Stronger SHA-256 and SHA-512 algorithms through the same APIs must not match the SHA-1 rule."
+    },
+    {
+      "control_id": "use-of-sha224-negative",
+      "rule_id": "use-of-sha224",
+      "cwes": [328],
+      "rule_path": "java/lang/security/audit/crypto/use-of-sha224.yaml",
+      "rule_sha256": "10e964021f3766d9b631e1349d3a9a06593b1aa84d1e0daa00a2063e0289924b",
+      "fixture_path": "rules/fixtures/java/use-of-sha224.java",
+      "fixture_sha256": "2da5018d3570a30a471b18ffbb80d44fb463808f12c54cdf2fa1a48aeac73441",
+      "expected_findings": 0,
+      "rationale": "Stronger SHA-256, SHA-384, and SHA3-256 variants must not match the SHA-224 rule."
+    },
+    {
+      "control_id": "java-reverse-shell-negative",
+      "rule_id": "java-reverse-shell",
+      "cwes": [78],
+      "rule_path": "java/lang/security/audit/java-reverse-shell.yaml",
+      "rule_sha256": "e9bd6454c8fe12abff51d306d84796ed9b0b8b634effbf7ed66c3ff21f772146",
+      "fixture_path": "rules/fixtures/java/java-reverse-shell.java",
+      "fixture_sha256": "f7cc7e8a8d732fa8baf2ee04c59666b9fa4250ad2b954ad6e5e4521d0220283a",
+      "expected_findings": 0,
+      "rationale": "Isolated process and socket behavior without the combined reverse-shell sequence must not match."
+    },
+    {
+      "control_id": "ldap-entry-poisoning-negative",
+      "rule_id": "ldap-entry-poisoning",
+      "cwes": [90],
+      "rule_path": "java/lang/security/audit/ldap-entry-poisoning.yaml",
+      "rule_sha256": "02fc95049d4dcf80fe55f8edd3fac5b1da2defff98b36ce582d01ccc1945a08c",
+      "fixture_path": "rules/fixtures/java/ldap-entry-poisoning.java",
+      "fixture_sha256": "16a68369deb5e0ed783c3788bd782fa7f706e0c93fb12c6da17cccde9ee1b8ff",
+      "expected_findings": 0,
+      "rationale": "Returning LDAP objects explicitly disabled or left at the safe default must not match."
+    },
+    {
+      "control_id": "xssrequestwrapper-is-insecure-negative",
+      "rule_id": "xssrequestwrapper-is-insecure",
+      "cwes": [79],
+      "rule_path": "java/lang/security/audit/xssrequestwrapper-is-insecure.yaml",
+      "rule_sha256": "22b0d85d11f301a0bd5f3b41fa6b8ea81a9bd2f41de570f3f568e26a89c35ee2",
+      "fixture_path": "rules/fixtures/java/xssrequestwrapper-is-insecure.java",
+      "fixture_sha256": "4c57fd59417c177761efaceab9d97ba3bddc91cc0b77cc61a6acaa2eb1e881dd",
+      "expected_findings": 0,
+      "rationale": "Similarly named wrappers and benign regular expressions without the unsafe signature must not match."
+    }
+  ]
+}
