@@ -2,6 +2,7 @@ from pathlib import Path
 
 import main as cli
 from owasp_audit import AuditError, AuditResult
+from semgrep_compat import CompatError, CompatResult
 from semgrep_rules import InventoryError, InventoryResult
 
 
@@ -121,3 +122,86 @@ def test_main_reports_rule_inventory_failure(monkeypatch, capsys) -> None:
     error = capsys.readouterr().err
     assert "INVENTORY_STATUS=failed" in error
     assert "rule working tree is not clean" in error
+
+
+def test_main_runs_semgrep_compatibility(
+    monkeypatch,
+    capsys,
+    tmp_path: Path,
+) -> None:
+    run_dir = tmp_path / "run"
+
+    def fake_validate_rules(**kwargs) -> CompatResult:
+        assert kwargs["rules_dir"] == Path("rules")
+        assert kwargs["inventory_path"] == Path("inventory.json")
+        assert kwargs["run_dir"] == run_dir
+        assert kwargs["semgrep_executable"] == "semgrep"
+        assert kwargs["expected_version"] == "1.179.0"
+        return CompatResult(
+            status="completed",
+            semgrep_version="1.179.0",
+            upstream_commit="a" * 40,
+            file_count=10,
+            compatible_count=8,
+            incompatible_count=1,
+            requires_pro_count=1,
+            error_count=0,
+            report_path=str(run_dir / "compatibility.json"),
+        )
+
+    monkeypatch.setattr(cli, "validate_rules", fake_validate_rules)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-semgrep",
+            "--rules",
+            "rules",
+            "--inventory",
+            "inventory.json",
+            "--run-dir",
+            str(run_dir),
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "COMPAT_STATUS=completed" in output
+    assert "COMPATIBLE=8" in output
+    assert "REQUIRES_PRO=1" in output
+
+
+def test_main_reports_semgrep_compatibility_failure(
+    monkeypatch,
+    capsys,
+) -> None:
+    def fail_validation(**kwargs) -> CompatResult:
+        raise CompatError("unexpected Semgrep version")
+
+    monkeypatch.setattr(cli, "validate_rules", fail_validation)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-semgrep",
+            "--rules",
+            "rules",
+            "--inventory",
+            "inventory.json",
+            "--run-dir",
+            "run",
+            "--semgrep",
+            "semgrep",
+            "--expected-version",
+            "1.179.0",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "COMPAT_STATUS=failed" in error
+    assert "unexpected Semgrep version" in error

@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
+from semgrep_compat import CompatError, validate_rules
 from semgrep_rules import InventoryError, inventory_rules
 
 
@@ -32,6 +33,17 @@ def build_parser() -> argparse.ArgumentParser:
     inventory.add_argument("--rules", type=Path, required=True)
     inventory.add_argument("--output", type=Path, required=True)
     inventory.set_defaults(handler=run_semgrep_inventory)
+
+    compatibility = rule_commands.add_parser(
+        "validate-semgrep",
+        help="Validate inventoried rules with a pinned Semgrep CE version",
+    )
+    compatibility.add_argument("--rules", type=Path, required=True)
+    compatibility.add_argument("--inventory", type=Path, required=True)
+    compatibility.add_argument("--run-dir", type=Path, required=True)
+    compatibility.add_argument("--semgrep", required=True)
+    compatibility.add_argument("--expected-version", required=True)
+    compatibility.set_defaults(handler=run_semgrep_compatibility)
     return parser
 
 
@@ -64,17 +76,39 @@ def run_semgrep_inventory(args: argparse.Namespace) -> int:
     return 0
 
 
+def run_semgrep_compatibility(args: argparse.Namespace) -> int:
+    result = validate_rules(
+        rules_dir=args.rules,
+        inventory_path=args.inventory,
+        run_dir=args.run_dir,
+        semgrep_executable=args.semgrep,
+        expected_version=args.expected_version,
+    )
+    print(f"COMPAT_STATUS={result.status}")
+    print(f"SEMGREP_VERSION={result.semgrep_version}")
+    print(f"UPSTREAM_COMMIT={result.upstream_commit}")
+    print(f"RULE_FILES={result.file_count}")
+    print(f"COMPATIBLE={result.compatible_count}")
+    print(f"INCOMPATIBLE={result.incompatible_count}")
+    print(f"REQUIRES_PRO={result.requires_pro_count}")
+    print(f"ERRORS={result.error_count}")
+    print(f"REPORT={result.report_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     try:
         return args.handler(args)
-    except (AuditError, InventoryError) as error:
-        status = (
-            "INVENTORY_STATUS=failed"
-            if getattr(args, "rule_command", None)
-            else "AUDIT_STATUS=failed"
-        )
+    except (AuditError, InventoryError, CompatError) as error:
+        if getattr(args, "rule_command", None) == "validate-semgrep":
+            status = "COMPAT_STATUS=failed"
+        elif getattr(args, "rule_command", None):
+            status = "INVENTORY_STATUS=failed"
+        else:
+            status = "AUDIT_STATUS=failed"
+
         print(status, file=sys.stderr)
         print(f"ERROR={error}", file=sys.stderr)
         return 1
