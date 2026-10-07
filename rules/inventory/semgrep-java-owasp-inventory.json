@@ -1,0 +1,1413 @@
+{
+  "candidate_counts_by_cwe": {
+    "22": 2,
+    "327": 12,
+    "328": 4,
+    "330": 1,
+    "501": 1,
+    "614": 1,
+    "643": 1,
+    "78": 5,
+    "79": 4,
+    "89": 14,
+    "90": 3
+  },
+  "candidate_rule_count": 48,
+  "coverage_status": "not_validated",
+  "execution_compatibility": "not_validated",
+  "expected_cwes": [
+    22,
+    78,
+    79,
+    89,
+    90,
+    327,
+    328,
+    330,
+    501,
+    614,
+    643
+  ],
+  "generated_at": "2026-10-07T06:15:36.396020+00:00",
+  "head_detached": true,
+  "java_rule_count": 112,
+  "java_security_rule_count": 108,
+  "rules": [
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "avoid-implementing-custom-digests",
+      "impact": "LOW",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Cryptographic algorithms are notoriously difficult to get right. By implementing a custom message digest, you risk introducing security issues into your program. Use one of the many sound message digests already available to you: MessageDigest sha256Digest = MessageDigest.getInstance(\"SHA256\");",
+      "mode": "search",
+      "references": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#custom-algorithms"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/ssl/avoid-implementing-custom-digests.yaml",
+      "source_sha256": "70f064ac02aaac37ddccf58f9e95653a31c5d9719925fcea351810a704a40f69",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "cbc-padding-oracle",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Using CBC with PKCS5Padding is susceptible to padding oracle attacks. A malicious actor could discern the difference between plaintext with valid or invalid padding. Further, CBC mode does not include any integrity checks. Use 'AES/GCM/NoPadding' instead.",
+      "mode": "search",
+      "references": [
+        "https://capec.mitre.org/data/definitions/463.html",
+        "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html#cipher-modes",
+        "https://find-sec-bugs.github.io/bugs.htm#CIPHER_INTEGRITY"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/cbc-padding-oracle.yaml",
+      "source_sha256": "456efa88e5f7a8e0de19b1ce2209867d51752c65f06bbf9e12911de3d1ffcc25",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        78
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "command-injection-formatted-runtime-call",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "A formatted or concatenated string was detected as input to a java.lang.Runtime call. This is dangerous if a variable is controlled by user input and could result in a command injection. Ensure your variables are not controlled by users or sufficiently sanitized.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/audit/command-injection-formatted-runtime-call.yaml",
+      "source_sha256": "7b975f6b9bf55cc6190c79dca0c523634cea28d013fb188ff8929b2dcd13c00e",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        78
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "command-injection-process-builder",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "A formatted or concatenated string was detected as input to a ProcessBuilder call. This is dangerous if a variable is controlled by user input and could result in a command injection. Ensure your variables are not controlled by users or sufficiently sanitized.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/audit/command-injection-process-builder.yaml",
+      "source_sha256": "c2056c9aa6e4f92b16604cb6a3b7fb554c4202fda3f3edadb127a2f2034195a2",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        614
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "cookie-missing-secure-flag",
+      "impact": "LOW",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "A cookie was detected without setting the 'secure' flag. The 'secure' flag for cookies prevents the client from transmitting the cookie over insecure channels such as HTTP. Set the 'secure' flag by calling '$COOKIE.setSecure(true);'",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A05_2021-Security_Misconfiguration"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/cookie-missing-secure-flag.yaml",
+      "source_sha256": "386f32fa4134b664b4a274a06a3300ccf9e61452d50e1bed74da82fd8c445a4d",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "ecb-cipher",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Cipher in ECB mode is detected. ECB mode produces the same output for the same input each time which allows an attacker to intercept and replay the data. Further, ECB mode does not provide any integrity checking. See https://find-sec-bugs.github.io/bugs.htm#CIPHER_INTEGRITY.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/ecb-cipher.yaml",
+      "source_sha256": "5814655dc47df11b01b8bdca6c8d2ae6b6f0872215d2ed4003da37bb587b9cd5",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "find-sql-string-concatenation",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "In $METHOD, $X is used to construct a SQL query via string concatenation.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/jboss/security/session_sqli.yaml",
+      "source_sha256": "2001bf6faef39e21eeebf5cff9e6825963c0f8899c80cea4cba1045686e505e4",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "jboss"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "formatted-sql-string",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "taint",
+      "references": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+        "https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html#create_ps",
+        "https://software-security.sans.org/developer-how-to/fix-sql-injection-in-java-using-prepared-callable-statement"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/audit/formatted-sql-string.yaml",
+      "source_sha256": "f1859af40853ca1f51219adbd9c1dadb4de10c090d37efa4ed6d6fef5b5ae33a",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "hibernate-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/hibernate-sqli.yaml",
+      "source_sha256": "6d2e814bae0273159556baa67569fa0af14e8b2f519e5713196f551b698002b5",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "hibernate"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        22
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "httpservlet-path-traversal",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected a potential path traversal. A malicious actor could control the location of this file, to include going backwards in the directory with '../'. To address this, ensure that user-controlled variables in file paths are sanitized. You may also consider using a utility method such as org.apache.commons.io.FilenameUtils.getName(...) to only retrieve the file name from the path.",
+      "mode": "taint",
+      "references": [
+        "https://www.owasp.org/index.php/Path_Traversal"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/httpservlet-path-traversal.yaml",
+      "source_sha256": "87a56a333a7fe6cd86d6aaca3336ee483c49078a59ce38859a4480fcc05dbcac",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "java-jwt-none-alg",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected use of the 'none' algorithm in a JWT token. The 'none' algorithm assumes the integrity of the token has already been verified. This would allow a malicious actor to forge a JWT token that will automatically be verified. Do not explicitly use the 'none' algorithm. Instead, use an algorithm such as 'HS256'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/java-jwt/security/jwt-none-alg.yaml",
+      "source_sha256": "42d52e21df87207ecf3fba6482cce08a1ac02173a0ff9c2e8f20b7ad9b3b2769",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "jwt"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        78
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "java-reverse-shell",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Semgrep found potential reverse shell behavior",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/java-reverse-shell.yaml",
+      "source_sha256": "e9bd6454c8fe12abff51d306d84796ed9b0b8b634effbf7ed66c3ff21f772146",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        22
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jax-rs-path-traversal",
+      "impact": "LOW",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a potential path traversal. A malicious actor could control the location of this file, to include going backwards in the directory with '../'. To address this, ensure that user-controlled variables in file paths are sanitized. You may also consider using a utility method such as org.apache.commons.io.FilenameUtils.getName(...) to only retrieve the file name from the path.",
+      "mode": "search",
+      "references": [
+        "https://www.owasp.org/index.php/Path_Traversal"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/jax-rs/security/jax-rs-path-traversal.yaml",
+      "source_sha256": "80ae163c9c52db36570c96eb42399a7ad47fed0fc849446583af17490119d7b7",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "jax-rs"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jdbc-sql-formatted-string",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Possible JDBC injection detected. Use the parameterized query feature available in queryForObject instead of concatenating or formatting strings: 'jdbc.queryForObject(\"select * from table where name = ?\", Integer.class, parameterName);'",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/jdbc-sql-formatted-string.yaml",
+      "source_sha256": "da3dc1a5ce2f74d0f465732e234d6bfd917cf8c724bb35f7dd53a1f1fe5039bf",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "jdbc"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jdbc-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/jdbc-sqli.yaml",
+      "source_sha256": "2620e9ce365bfa7a6398ba0c62b2263a9e4b525d4979222d1374c65f57a7cf11",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "jdbc"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jdo-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/jdo-sqli.yaml",
+      "source_sha256": "162571d1fbde23a148b959284678900669a1834415b1cb1f36b52a9d93dbe13e",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jjwt-none-alg",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected use of the 'none' algorithm in a JWT token. The 'none' algorithm assumes the integrity of the token has already been verified. This would allow a malicious actor to forge a JWT token that will automatically be verified. Do not explicitly use the 'none' algorithm. Instead, use an algorithm such as 'HS256'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/jjwt/security/jwt-none-alg.yaml",
+      "source_sha256": "fc6f8a4dca1eb951a8e114bbd2977f53fbb06316d85945573b76fd7939b81801",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "jwt"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "jpa-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/jpa-sqli.yaml",
+      "source_sha256": "891ade247132858887c4125289a0e373c7a639cdfbf94fadeb6b8f42b0ca5b8b",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "jpa"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        90
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "ldap-entry-poisoning",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "An object-returning LDAP search will allow attackers to control the LDAP response. This could lead to Remote Code Execution.",
+      "mode": "search",
+      "references": [
+        "https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE-wp.pdf",
+        "https://cheatsheetseries.owasp.org/cheatsheets/LDAP_Injection_Prevention_Cheat_Sheet.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/ldap-entry-poisoning.yaml",
+      "source_sha256": "02fc95049d4dcf80fe55f8edd3fac5b1da2defff98b36ce582d01ccc1945a08c",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        90
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "ldap-injection",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected non-constant data passed into an LDAP query. If this data can be controlled by an external user, this is an LDAP injection. Ensure data passed to an LDAP query is not controllable; or properly sanitize the data.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/ldap-injection.yaml",
+      "source_sha256": "8f190c0e7045eff4b24e8f0452561dc57d002368fa0763dd1a7db2d9c894662f",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "md5-used-as-password",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "It looks like MD5 is used as a password hash. MD5 is not considered a secure password hash because it can be cracked by an attacker in a short amount of time. Use a suitable password hashing function such as PBKDF2 or bcrypt. You can use `javax.crypto.SecretKeyFactory` with `SecretKeyFactory.getInstance(\"PBKDF2WithHmacSHA1\")` or, if using Spring, `org.springframework.security.crypto.bcrypt`.",
+      "mode": "taint",
+      "references": [
+        "https://tools.ietf.org/id/draft-lvelvindron-tls-md5-sha1-deprecate-01.html",
+        "https://github.com/returntocorp/semgrep-rules/issues/1609",
+        "https://docs.oracle.com/javase/7/docs/technotes/guides/security/StandardNames.html#SecretKeyFactory",
+        "https://docs.spring.io/spring-security/site/docs/current/api/org/springframework/security/crypto/bcrypt/BCryptPasswordEncoder.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/md5-used-as-password.yaml",
+      "source_sha256": "5f39d44a2da3bcbb246046660bc63921c601314a9e0bc26d98e20725ef5db0be",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java",
+        "md5"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        79
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "no-direct-response-writer",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected a request with potential user-input going into a OutputStream or Writer object. This bypasses any view or template environments, including HTML escaping, which may expose this application to cross-site scripting (XSS) vulnerabilities. Consider using a view technology such as JavaServer Faces (JSFs) which automatically escapes HTML views.",
+      "mode": "taint",
+      "references": [
+        "https://www3.ntu.edu.sg/home/ehchua/programming/java/JavaServerFaces.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/xss/no-direct-response-writer.yaml",
+      "source_sha256": "7904c5a59f31928b17fecf51b359593ae50ae812126f78fb1130a19046feb914",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java",
+        "servlets"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "no-null-cipher",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "NullCipher was detected. This will not encrypt anything; the cipher text will be the same as the plain text. Use a valid, secure cipher: Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/no-null-cipher.yaml",
+      "source_sha256": "dc4c66784f5c2d40e92b8fe0984a6066fd0df26aa540e83c1b9febd0b2103c5d",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        79
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "servletresponse-writer-xss",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Cross-site scripting detected in HttpServletResponse writer with variable '$VAR'. User input was detected going directly from the HttpServletRequest into output. Ensure your data is properly encoded using org.owasp.encoder.Encode.forHtml: 'Encode.forHtml($VAR)'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/servletresponse-writer-xss.yaml",
+      "source_sha256": "72a3808fc086a03a7f3e3964646807d5a6d1c457fc5eb77839100e6b773bbb80",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "spring-sqli",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected a string argument from a public method contract in a raw SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/spring/security/audit/spring-sqli.yaml",
+      "source_sha256": "3d96bc171102b7ca7931a2c38203ff384ba34b3b97fb7419de5642502646da72",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "spring"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        78
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-cmd-from-http-request",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected input from a HTTPServletRequest going into a 'ProcessBuilder' or 'exec' command. This could lead to command injection if variables passed into the exec commands are not properly sanitized. Instead, avoid using these OS commands with user-supplied input, or, if you must use these commands, use a whitelist of specific values.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/lang/security/audit/tainted-cmd-from-http-request.yaml",
+      "source_sha256": "fe76aea9a7db7b795077092d541c5c4af6fa22e77a397a0677d5a7cd996dd94e",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        79
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-html-string",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected user input flowing into a manually constructed HTML string. You may be accidentally bypassing secure methods of rendering HTML by manually constructing HTML and this could create a cross-site scripting vulnerability, which could let attackers steal sensitive user data. To be sure this is safe, check that the HTML is rendered safely. You can use the OWASP ESAPI encoder if you must render user data.",
+      "mode": "taint",
+      "references": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/spring/security/injection/tainted-html-string.yaml",
+      "source_sha256": "dade1bf739fe81b16f1b738e49b043409bc6e6bd2a656b224e9c64722930e3b5",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java",
+        "spring"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        90
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-ldapi-from-http-request",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected input from a HTTPServletRequest going into an LDAP query. This could lead to LDAP injection if the input is not properly sanitized, which could result in attackers modifying objects in the LDAP tree structure. Ensure data passed to an LDAP query is not controllable or properly sanitize the data.",
+      "mode": "taint",
+      "references": [
+        "https://sensei.securecodewarrior.com/recipes/scw%3Ajava%3ALDAP-injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/tainted-ldapi-from-http-request.yaml",
+      "source_sha256": "74c2e4c50fd6f45a805f679409ef3b4c2857fb1a284f11726e73281b3c4fffc4",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        501
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-session-from-http-request",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected input from a HTTPServletRequest going into a session command, like `setAttribute`. User input into such a command could lead to an attacker inputting malicious code into your session parameters, blurring the line between what's trusted and untrusted, and therefore leading to a trust boundary violation. This could lead to programmers trusting unvalidated data. Instead, thoroughly sanitize user input before passing it into such function calls.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/Top10/A04_2021-Insecure_Design"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/tainted-session-from-http-request.yaml",
+      "source_sha256": "de3157408f7178b4c1a58be253f59675142e9a0a8a9bf5d8b90de9ab2ceb454b",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-sql-from-http-request",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected input from a HTTPServletRequest going into a SQL sink or statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use parameterized SQL queries or properly sanitize user input instead.",
+      "mode": "taint",
+      "references": [
+        "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+        "https://owasp.org/www-community/attacks/SQL_Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/tainted-sql-from-http-request.yaml",
+      "source_sha256": "b490f7c6e4d99e97420f23b773928ab1d5ece20a0f716c91f01c44ed3ee020f3",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "sql",
+        "java",
+        "servlets",
+        "spring"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-sql-string",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected user input used to manually construct a SQL string. This is usually bad practice because manual construction could accidentally result in a SQL injection. An attacker could use a SQL injection to steal or modify contents of the database. Instead, use a parameterized query which is available by default in most database engines. Alternatively, consider using an object-relational mapper (ORM) such as Sequelize which will protect your queries.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/www-community/attacks/SQL_Injection"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/aws-lambda/security/tainted-sql-string.yaml",
+      "source_sha256": "ac47181ad68e6a9facdbe004f9492d1b1793927c3df72365e8fbadf8fdd041ec",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "aws-lambda"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-sql-string",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "User data flows into this manually-constructed SQL string. User data can be safely inserted into SQL strings using prepared statements or an object-relational mapper (ORM). Manually-constructed SQL strings is a possible indicator of SQL injection, which could let an attacker steal or manipulate data from the database. Instead, use prepared statements (`connection.PreparedStatement`) or a safe library.",
+      "mode": "taint",
+      "references": [
+        "https://docs.oracle.com/javase/7/docs/api/java/sql/PreparedStatement.html"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/spring/security/injection/tainted-sql-string.yaml",
+      "source_sha256": "8ce15465ab34f63a71486a809e992be12322faa1b97e63f113dae0b1bf489a3e",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "spring"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected SQL statement that is tainted by `$EVENT` object. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use parameterized SQL queries or properly sanitize user input instead.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/aws-lambda/security/tainted-sqli.yaml",
+      "source_sha256": "d7b019c9c8adbc720bceb4c96e9ca050551b8f0a12f7988a150929a3efa8b89a",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "sql",
+        "java",
+        "aws-lambda"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        78
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-system-command",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected user input entering a method which executes a system command. This could result in a command injection vulnerability, which allows an attacker to inject an arbitrary system command onto the server. The attacker could download malware onto or steal data from the server. Instead, use ProcessBuilder, separating the command into individual arguments, like this: `new ProcessBuilder(\"ls\", \"-al\", targetDirectory)`. Further, make sure you hardcode or allowlist the actual command so that attackers can't run arbitrary commands.",
+      "mode": "taint",
+      "references": [
+        "https://www.stackhawk.com/blog/command-injection-java/",
+        "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
+        "https://github.com/github/codeql/blob/main/java/ql/src/Security/CWE/CWE-078/ExecUnescaped.java"
+      ],
+      "severity": "ERROR",
+      "source_path": "java/spring/security/injection/tainted-system-command.yaml",
+      "source_sha256": "c9122f07dec3d4f45e1c35a75e2bba81a5670fc0e704d474ebb8b87f990afb11",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java",
+        "spring"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "MEDIUM",
+      "cwes": [
+        643
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "tainted-xpath-from-http-request",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "HIGH",
+      "message": "Detected input from a HTTPServletRequest going into a XPath evaluate or compile command. This could lead to xpath injection if variables passed into the evaluate or compile commands are not properly sanitized. Xpath injection could lead to unauthorized access to sensitive information in XML documents. Instead, thoroughly sanitize user input or use parameterized xpath queries if you can.",
+      "mode": "taint",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/tainted-xpath-from-http-request.yaml",
+      "source_sha256": "58761dd7ffa27e5187d11414dd032ff1be724f3fc8903b3e5ba19dfd8fefffb8",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "turbine-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/turbine-sqli.yaml",
+      "source_sha256": "47b47cf0c9065c1ab524da84cedad2cda0379db5de1e7a5e2f07f052985c2f7a",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "turbine"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-aes-ecb",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Use of AES with ECB mode detected. ECB doesn't provide message confidentiality and  is not semantically secure so should not be used. Instead, use a strong, secure cipher: Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures",
+        "https://googleprojectzero.blogspot.com/2022/10/rc4-is-still-considered-harmful.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-aes-ecb.yaml",
+      "source_sha256": "b10b001760ce2de0c0fa113b9326f54a510b272d7b61e369e7a584ba35838899",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-blowfish",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Use of Blowfish was detected. Blowfish uses a 64-bit block size that  makes it vulnerable to birthday attacks, and is therefore considered non-compliant.  Instead, use a strong, secure cipher: Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures",
+        "https://googleprojectzero.blogspot.com/2022/10/rc4-is-still-considered-harmful.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-blowfish.yaml",
+      "source_sha256": "1a24cfcd619bc816ed7a3748f87b3c42d87f46f991cc7d9e95849222266456fc",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-default-aes",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Use of AES with no settings detected. By default, java.crypto.Cipher uses ECB mode. ECB doesn't  provide message confidentiality and is not semantically secure so should not be used. Instead, use a strong, secure cipher: java.crypto.Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures",
+        "https://googleprojectzero.blogspot.com/2022/10/rc4-is-still-considered-harmful.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-default-aes.yaml",
+      "source_sha256": "d6862d5cfc8a44592a63d180b606a8b9cc0ec9df09140332377714475f1ad12e",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        328
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-md5",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is therefore not suitable as a cryptographic signature. Use HMAC instead.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-md5.yaml",
+      "source_sha256": "fd3f927fcf13ef2848d9aa9f3290e42621baf349851f5bd1e81f41d9913a4870",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        328
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-md5-digest-utils",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected MD5 hash algorithm which is considered insecure. MD5 is not collision resistant and is therefore not suitable as a cryptographic signature. Use HMAC instead.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-md5-digest-utils.yaml",
+      "source_sha256": "90e7e07210135b225535e70c49caab651433cf6ffd357d8d38f173c141872ce0",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-rc2",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Use of RC2 was detected. RC2 is vulnerable to related-key attacks, and is therefore considered non-compliant. Instead, use a strong, secure cipher: Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures",
+        "https://googleprojectzero.blogspot.com/2022/10/rc4-is-still-considered-harmful.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-rc2.yaml",
+      "source_sha256": "eea11ee447228a1855f7a203dbcbeebe2f279d92a095aaff215c1f433bd13ad0",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        327
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-rc4",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Use of RC4 was detected. RC4 is vulnerable to several attacks, including stream cipher attacks and bit flipping attacks. Instead, use a strong, secure cipher: Cipher.getInstance(\"AES/CBC/PKCS7PADDING\"). See https://owasp.org/www-community/Using_the_Java_Cryptographic_Extensions for more information.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures",
+        "https://googleprojectzero.blogspot.com/2022/10/rc4-is-still-considered-harmful.html"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-rc4.yaml",
+      "source_sha256": "335f23524ab959d7274546b3e5f81a91dc011c84ef9813cb5ebbc2d0ad8c4dba",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        328
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-sha1",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "MEDIUM",
+      "message": "Detected SHA1 hash algorithm which is considered insecure. SHA1 is not collision resistant and is therefore not suitable as a cryptographic signature. Instead, use PBKDF2 for password hashing or SHA256 or SHA512 for other hash function applications.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-sha1.yaml",
+      "source_sha256": "e0592e0fd0b91d960d4bd9670e0e3b9838a932d473166b98b4de1478a5c28dd6",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "HIGH",
+      "cwes": [
+        328
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "use-of-sha224",
+      "impact": "LOW",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "This code uses a 224-bit hash function, which is deprecated or disallowed in some security policies. Consider updating to a stronger hash function such as SHA-384 or higher to ensure compliance and security.",
+      "mode": "search",
+      "references": [
+        "https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-131Ar3.ipd.pdf",
+        "https://www.cyber.gov.au/resources-business-and-government/essential-cyber-security/ism/cyber-security-guidelines/guidelines-cryptography"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/use-of-sha224.yaml",
+      "source_sha256": "10e964021f3766d9b631e1349d3a9a06593b1aa84d1e0daa00a2063e0289924b",
+      "subcategory": [
+        "vuln"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        89
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "vertx-sqli",
+      "impact": "HIGH",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected a formatted string in a SQL statement. This could lead to SQL injection if variables in the SQL statement are not properly sanitized. Use a prepared statements (java.sql.PreparedStatement) instead. You can obtain a PreparedStatement using 'connection.prepareStatement'.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/sqli/vertx-sqli.yaml",
+      "source_sha256": "f565f040167f9c19289316cf78a98967e79447f55dcb60f4fed1a703d2a4c605",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "vertx"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        330
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "weak-random",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "Detected use of the functions `Math.random()` or `java.util.Random()`. These are both not cryptographically strong random number generators (RNGs). If you are using these RNGs to create passwords or secret tokens, use `java.security.SecureRandom` instead.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A02_2021-Cryptographic_Failures"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/crypto/weak-random.yaml",
+      "source_sha256": "91526e331cdebd023d6094d66cee8682ac0423d5f15d9d238b07f5d2e36bfe7b",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "category": "security",
+      "confidence": "LOW",
+      "cwes": [
+        79
+      ],
+      "execution_compatibility": "not_validated",
+      "id": "xssrequestwrapper-is-insecure",
+      "impact": "MEDIUM",
+      "languages": [
+        "java"
+      ],
+      "likelihood": "LOW",
+      "message": "It looks like you're using an implementation of XSSRequestWrapper from dzone. (https://www.javacodegeeks.com/2012/07/anti-cross-site-scripting-xss-filter.html) The XSS filtering in this code is not secure and can be bypassed by malicious actors. It is recommended to use a stack that automatically escapes in your view or templates instead of filtering yourself.",
+      "mode": "search",
+      "references": [
+        "https://owasp.org/Top10/A03_2021-Injection"
+      ],
+      "severity": "WARNING",
+      "source_path": "java/lang/security/audit/xssrequestwrapper-is-insecure.yaml",
+      "source_sha256": "22b0d85d11f301a0bd5f3b41fa6b8ea81a9bd2f41de570f3f568e26a89c35ee2",
+      "subcategory": [
+        "audit"
+      ],
+      "technology": [
+        "java"
+      ]
+    }
+  ],
+  "scanned_rule_count": 130,
+  "schema_version": 1,
+  "status": "passed",
+  "upstream_commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
+  "upstream_url": "https://github.com/semgrep/semgrep-rules.git",
+  "working_tree_clean": true
+}

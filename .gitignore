@@ -23,6 +23,9 @@ target/
 datasets/raw/
 datasets/work/
 
+# Downloaded upstream rule repositories
+rules/upstream/
+
 # Generated experiment evidence: preserve locally by run ID, but do not commit it
 artifacts/
 
