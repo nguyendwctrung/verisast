@@ -10,12 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TypedDict
 
-from semgrep_rules import (
-    EXPECTED_REMOTE,
-    RuleGitInfo,
-    read_git_info,
-    sha256_file,
-)
+from semgrep_rules import EXPECTED_REMOTE, RuleGitInfo, read_git_info, sha256_file
 
 SCHEMA_VERSION = 1
 VERSION_PATTERN = re.compile(r"\d+\.\d+\.\d+")

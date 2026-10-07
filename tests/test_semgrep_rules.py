@@ -3,13 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from semgrep_rules import (
-    InventoryError,
-    RuleGitInfo,
-    inventory_rules,
-    load_rules,
-    parse_cwes,
-)
+from semgrep_rules import InventoryError, RuleGitInfo, inventory_rules, load_rules, parse_cwes
 
 FROZEN_COMMIT = "b" * 40
 

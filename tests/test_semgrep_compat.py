@@ -3,12 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from semgrep_compat import (
-    CommandResult,
-    CompatError,
-    classify_result,
-    validate_rules,
-)
+from semgrep_compat import CommandResult, CompatError, classify_result, validate_rules
 from semgrep_rules import RuleGitInfo, sha256_file
 
 RULE_COMMIT = "a" * 40

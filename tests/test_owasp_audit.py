@@ -3,13 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from owasp_audit import (
-    AuditError,
-    GitInfo,
-    audit_dataset,
-    load_ground_truth,
-    map_java_sources,
-)
+from owasp_audit import AuditError, GitInfo, audit_dataset, load_ground_truth, map_java_sources
 
 
 FROZEN_COMMIT = "8b67a88d73b2594570fc21150705283de884620b"
