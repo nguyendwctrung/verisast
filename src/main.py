@@ -6,6 +6,7 @@ from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from semgrep_compat import CompatError, validate_rules
 from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
+from semgrep_review import ReviewError, ReviewResult, init_review, validate_review
 from semgrep_rules import InventoryError, inventory_rules
 
 
@@ -70,6 +71,22 @@ def build_parser() -> argparse.ArgumentParser:
     controls.add_argument("--semgrep", required=True)
     controls.add_argument("--expected-version", required=True)
     controls.set_defaults(handler=run_semgrep_controls)
+
+    init_rule_review = rule_commands.add_parser(
+        "init-review",
+        help="Create a manual review worksheet from the rule inventory",
+    )
+    init_rule_review.add_argument("--inventory", type=Path, required=True)
+    init_rule_review.add_argument("--output", type=Path, required=True)
+    init_rule_review.set_defaults(handler=run_semgrep_review_init)
+
+    validate_rule_review = rule_commands.add_parser(
+        "validate-review",
+        help="Validate and summarize a Semgrep rule review worksheet",
+    )
+    validate_rule_review.add_argument("--inventory", type=Path, required=True)
+    validate_rule_review.add_argument("--review", type=Path, required=True)
+    validate_rule_review.set_defaults(handler=run_semgrep_review_validation)
 
     return parser
 
@@ -175,6 +192,35 @@ def run_semgrep_controls(args: argparse.Namespace) -> int:
     return int(result.false_positive_count > 0 or result.error_count > 0)
 
 
+def run_semgrep_review_init(args: argparse.Namespace) -> int:
+    result = init_review(
+        inventory_path=args.inventory,
+        output_path=args.output,
+    )
+    return print_semgrep_review(result)
+
+
+def run_semgrep_review_validation(args: argparse.Namespace) -> int:
+    result = validate_review(
+        inventory_path=args.inventory,
+        review_path=args.review,
+    )
+    return print_semgrep_review(result)
+
+
+def print_semgrep_review(result: ReviewResult) -> int:
+    print(f"REVIEW_STATUS={result.status}")
+    print(f"UPSTREAM_COMMIT={result.upstream_commit}")
+    print(f"RULES={result.review_count}")
+    print(f"INCLUDE_DEVELOPMENT={result.include_count}")
+    print(f"EXCLUDE={result.exclude_count}")
+    print(f"NEEDS_EVIDENCE={result.needs_evidence_count}")
+    for cwe, count in result.include_counts_by_cwe.items():
+        print(f"CWE_{cwe}_INCLUDE={count}")
+    print(f"REVIEW={result.review_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -186,10 +232,13 @@ def main(argv: list[str] | None = None) -> int:
         CompatError,
         FixtureError,
         ControlError,
+        ReviewError,
     ) as error:
         rule_command = getattr(args, "rule_command", None)
 
-        if rule_command == "validate-controls":
+        if rule_command in {"init-review", "validate-review"}:
+            status = "REVIEW_STATUS=failed"
+        elif rule_command == "validate-controls":
             status = "CONTROL_STATUS=failed"
         elif rule_command == "validate-fixtures":
             status = "FIXTURE_STATUS=failed"

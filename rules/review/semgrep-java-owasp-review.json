@@ -1,0 +1,1188 @@
+{
+  "allowed_decisions": [
+    "EXCLUDE",
+    "INCLUDE_DEVELOPMENT",
+    "NEEDS_EVIDENCE"
+  ],
+  "allowed_reason_codes": [
+    "BENCHMARK_TECHNOLOGY_MATCH",
+    "CWE_ALIGNED",
+    "CWE_METADATA_MISMATCH",
+    "DUPLICATE_SEMANTICS",
+    "GENERIC_JAVA_SECURITY",
+    "INSUFFICIENT_EVIDENCE",
+    "OUT_OF_BENCHMARK_SCOPE",
+    "PRO_ONLY_OR_UNSUPPORTED",
+    "TECHNOLOGY_NOT_PRESENT"
+  ],
+  "candidate_rule_count": 48,
+  "generated_at": "2026-10-07T08:28:25.120350+00:00",
+  "inventory_path": "semgrep-java-owasp-inventory.json",
+  "inventory_sha256": "d2e108b38f58617a9e6cab0c5287d0dbfabb2c4396eeebf960ea5c337f47f481",
+  "reviews": [
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "avoid-implementing-custom-digests",
+      "source_path": "java/lang/security/audit/crypto/ssl/avoid-implementing-custom-digests.yaml",
+      "source_sha256": "70f064ac02aaac37ddccf58f9e95653a31c5d9719925fcea351810a704a40f69",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "cbc-padding-oracle",
+      "source_path": "java/lang/security/audit/cbc-padding-oracle.yaml",
+      "source_sha256": "456efa88e5f7a8e0de19b1ce2209867d51752c65f06bbf9e12911de3d1ffcc25",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        78
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        78
+      ],
+      "rule_id": "command-injection-formatted-runtime-call",
+      "source_path": "java/lang/security/audit/command-injection-formatted-runtime-call.yaml",
+      "source_sha256": "7b975f6b9bf55cc6190c79dca0c523634cea28d013fb188ff8929b2dcd13c00e",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        78
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        78
+      ],
+      "rule_id": "command-injection-process-builder",
+      "source_path": "java/lang/security/audit/command-injection-process-builder.yaml",
+      "source_sha256": "c2056c9aa6e4f92b16604cb6a3b7fb554c4202fda3f3edadb127a2f2034195a2",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        614
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        614
+      ],
+      "rule_id": "cookie-missing-secure-flag",
+      "source_path": "java/lang/security/audit/cookie-missing-secure-flag.yaml",
+      "source_sha256": "386f32fa4134b664b4a274a06a3300ccf9e61452d50e1bed74da82fd8c445a4d",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "ecb-cipher",
+      "source_path": "java/lang/security/audit/crypto/ecb-cipher.yaml",
+      "source_sha256": "5814655dc47df11b01b8bdca6c8d2ae6b6f0872215d2ed4003da37bb587b9cd5",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "find-sql-string-concatenation",
+      "source_path": "java/jboss/security/session_sqli.yaml",
+      "source_sha256": "2001bf6faef39e21eeebf5cff9e6825963c0f8899c80cea4cba1045686e505e4",
+      "technology": [
+        "jboss"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "formatted-sql-string",
+      "source_path": "java/lang/security/audit/formatted-sql-string.yaml",
+      "source_sha256": "f1859af40853ca1f51219adbd9c1dadb4de10c090d37efa4ed6d6fef5b5ae33a",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "hibernate-sqli",
+      "source_path": "java/lang/security/audit/sqli/hibernate-sqli.yaml",
+      "source_sha256": "6d2e814bae0273159556baa67569fa0af14e8b2f519e5713196f551b698002b5",
+      "technology": [
+        "hibernate"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        22
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        22
+      ],
+      "rule_id": "httpservlet-path-traversal",
+      "source_path": "java/lang/security/httpservlet-path-traversal.yaml",
+      "source_sha256": "87a56a333a7fe6cd86d6aaca3336ee483c49078a59ce38859a4480fcc05dbcac",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "java-jwt-none-alg",
+      "source_path": "java/java-jwt/security/jwt-none-alg.yaml",
+      "source_sha256": "42d52e21df87207ecf3fba6482cce08a1ac02173a0ff9c2e8f20b7ad9b3b2769",
+      "technology": [
+        "jwt"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        78
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        78
+      ],
+      "rule_id": "java-reverse-shell",
+      "source_path": "java/lang/security/audit/java-reverse-shell.yaml",
+      "source_sha256": "e9bd6454c8fe12abff51d306d84796ed9b0b8b634effbf7ed66c3ff21f772146",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        22
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        22
+      ],
+      "rule_id": "jax-rs-path-traversal",
+      "source_path": "java/jax-rs/security/jax-rs-path-traversal.yaml",
+      "source_sha256": "80ae163c9c52db36570c96eb42399a7ad47fed0fc849446583af17490119d7b7",
+      "technology": [
+        "jax-rs"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "jdbc-sql-formatted-string",
+      "source_path": "java/lang/security/audit/jdbc-sql-formatted-string.yaml",
+      "source_sha256": "da3dc1a5ce2f74d0f465732e234d6bfd917cf8c724bb35f7dd53a1f1fe5039bf",
+      "technology": [
+        "jdbc"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "jdbc-sqli",
+      "source_path": "java/lang/security/audit/sqli/jdbc-sqli.yaml",
+      "source_sha256": "2620e9ce365bfa7a6398ba0c62b2263a9e4b525d4979222d1374c65f57a7cf11",
+      "technology": [
+        "jdbc"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "jdo-sqli",
+      "source_path": "java/lang/security/audit/sqli/jdo-sqli.yaml",
+      "source_sha256": "162571d1fbde23a148b959284678900669a1834415b1cb1f36b52a9d93dbe13e",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "jjwt-none-alg",
+      "source_path": "java/jjwt/security/jwt-none-alg.yaml",
+      "source_sha256": "fc6f8a4dca1eb951a8e114bbd2977f53fbb06316d85945573b76fd7939b81801",
+      "technology": [
+        "jwt"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "jpa-sqli",
+      "source_path": "java/lang/security/audit/sqli/jpa-sqli.yaml",
+      "source_sha256": "891ade247132858887c4125289a0e373c7a639cdfbf94fadeb6b8f42b0ca5b8b",
+      "technology": [
+        "jpa"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        90
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        90
+      ],
+      "rule_id": "ldap-entry-poisoning",
+      "source_path": "java/lang/security/audit/ldap-entry-poisoning.yaml",
+      "source_sha256": "02fc95049d4dcf80fe55f8edd3fac5b1da2defff98b36ce582d01ccc1945a08c",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        90
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        90
+      ],
+      "rule_id": "ldap-injection",
+      "source_path": "java/lang/security/audit/ldap-injection.yaml",
+      "source_sha256": "8f190c0e7045eff4b24e8f0452561dc57d002368fa0763dd1a7db2d9c894662f",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "md5-used-as-password",
+      "source_path": "java/lang/security/audit/md5-used-as-password.yaml",
+      "source_sha256": "5f39d44a2da3bcbb246046660bc63921c601314a9e0bc26d98e20725ef5db0be",
+      "technology": [
+        "java",
+        "md5"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        79
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        79
+      ],
+      "rule_id": "no-direct-response-writer",
+      "source_path": "java/lang/security/audit/xss/no-direct-response-writer.yaml",
+      "source_sha256": "7904c5a59f31928b17fecf51b359593ae50ae812126f78fb1130a19046feb914",
+      "technology": [
+        "java",
+        "servlets"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "no-null-cipher",
+      "source_path": "java/lang/security/audit/crypto/no-null-cipher.yaml",
+      "source_sha256": "dc4c66784f5c2d40e92b8fe0984a6066fd0df26aa540e83c1b9febd0b2103c5d",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        79
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        79
+      ],
+      "rule_id": "servletresponse-writer-xss",
+      "source_path": "java/lang/security/servletresponse-writer-xss.yaml",
+      "source_sha256": "72a3808fc086a03a7f3e3964646807d5a6d1c457fc5eb77839100e6b773bbb80",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "spring-sqli",
+      "source_path": "java/spring/security/audit/spring-sqli.yaml",
+      "source_sha256": "3d96bc171102b7ca7931a2c38203ff384ba34b3b97fb7419de5642502646da72",
+      "technology": [
+        "spring"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        78
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        78
+      ],
+      "rule_id": "tainted-cmd-from-http-request",
+      "source_path": "java/lang/security/audit/tainted-cmd-from-http-request.yaml",
+      "source_sha256": "fe76aea9a7db7b795077092d541c5c4af6fa22e77a397a0677d5a7cd996dd94e",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        79
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        79
+      ],
+      "rule_id": "tainted-html-string",
+      "source_path": "java/spring/security/injection/tainted-html-string.yaml",
+      "source_sha256": "dade1bf739fe81b16f1b738e49b043409bc6e6bd2a656b224e9c64722930e3b5",
+      "technology": [
+        "java",
+        "spring"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        90
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        90
+      ],
+      "rule_id": "tainted-ldapi-from-http-request",
+      "source_path": "java/lang/security/audit/tainted-ldapi-from-http-request.yaml",
+      "source_sha256": "74c2e4c50fd6f45a805f679409ef3b4c2857fb1a284f11726e73281b3c4fffc4",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        501
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        501
+      ],
+      "rule_id": "tainted-session-from-http-request",
+      "source_path": "java/lang/security/audit/tainted-session-from-http-request.yaml",
+      "source_sha256": "de3157408f7178b4c1a58be253f59675142e9a0a8a9bf5d8b90de9ab2ceb454b",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "tainted-sql-from-http-request",
+      "source_path": "java/lang/security/audit/sqli/tainted-sql-from-http-request.yaml",
+      "source_sha256": "b490f7c6e4d99e97420f23b773928ab1d5ece20a0f716c91f01c44ed3ee020f3",
+      "technology": [
+        "sql",
+        "java",
+        "servlets",
+        "spring"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "tainted-sql-string",
+      "source_path": "java/aws-lambda/security/tainted-sql-string.yaml",
+      "source_sha256": "ac47181ad68e6a9facdbe004f9492d1b1793927c3df72365e8fbadf8fdd041ec",
+      "technology": [
+        "aws-lambda"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "tainted-sql-string",
+      "source_path": "java/spring/security/injection/tainted-sql-string.yaml",
+      "source_sha256": "8ce15465ab34f63a71486a809e992be12322faa1b97e63f113dae0b1bf489a3e",
+      "technology": [
+        "spring"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "tainted-sqli",
+      "source_path": "java/aws-lambda/security/tainted-sqli.yaml",
+      "source_sha256": "d7b019c9c8adbc720bceb4c96e9ca050551b8f0a12f7988a150929a3efa8b89a",
+      "technology": [
+        "sql",
+        "java",
+        "aws-lambda"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        78
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        78
+      ],
+      "rule_id": "tainted-system-command",
+      "source_path": "java/spring/security/injection/tainted-system-command.yaml",
+      "source_sha256": "c9122f07dec3d4f45e1c35a75e2bba81a5670fc0e704d474ebb8b87f990afb11",
+      "technology": [
+        "java",
+        "spring"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "MEDIUM",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        643
+      ],
+      "evidence": [],
+      "mode": "taint",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        643
+      ],
+      "rule_id": "tainted-xpath-from-http-request",
+      "source_path": "java/lang/security/audit/tainted-xpath-from-http-request.yaml",
+      "source_sha256": "58761dd7ffa27e5187d11414dd032ff1be724f3fc8903b3e5ba19dfd8fefffb8",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "turbine-sqli",
+      "source_path": "java/lang/security/audit/sqli/turbine-sqli.yaml",
+      "source_sha256": "47b47cf0c9065c1ab524da84cedad2cda0379db5de1e7a5e2f07f052985c2f7a",
+      "technology": [
+        "turbine"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "use-of-aes-ecb",
+      "source_path": "java/lang/security/audit/crypto/use-of-aes-ecb.yaml",
+      "source_sha256": "b10b001760ce2de0c0fa113b9326f54a510b272d7b61e369e7a584ba35838899",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "use-of-blowfish",
+      "source_path": "java/lang/security/audit/crypto/use-of-blowfish.yaml",
+      "source_sha256": "1a24cfcd619bc816ed7a3748f87b3c42d87f46f991cc7d9e95849222266456fc",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "use-of-default-aes",
+      "source_path": "java/lang/security/audit/crypto/use-of-default-aes.yaml",
+      "source_sha256": "d6862d5cfc8a44592a63d180b606a8b9cc0ec9df09140332377714475f1ad12e",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        328
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        328
+      ],
+      "rule_id": "use-of-md5",
+      "source_path": "java/lang/security/audit/crypto/use-of-md5.yaml",
+      "source_sha256": "fd3f927fcf13ef2848d9aa9f3290e42621baf349851f5bd1e81f41d9913a4870",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        328
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        328
+      ],
+      "rule_id": "use-of-md5-digest-utils",
+      "source_path": "java/lang/security/audit/crypto/use-of-md5-digest-utils.yaml",
+      "source_sha256": "90e7e07210135b225535e70c49caab651433cf6ffd357d8d38f173c141872ce0",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "use-of-rc2",
+      "source_path": "java/lang/security/audit/crypto/use-of-rc2.yaml",
+      "source_sha256": "eea11ee447228a1855f7a203dbcbeebe2f279d92a095aaff215c1f433bd13ad0",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        327
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        327
+      ],
+      "rule_id": "use-of-rc4",
+      "source_path": "java/lang/security/audit/crypto/use-of-rc4.yaml",
+      "source_sha256": "335f23524ab959d7274546b3e5f81a91dc011c84ef9813cb5ebbc2d0ad8c4dba",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        328
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        328
+      ],
+      "rule_id": "use-of-sha1",
+      "source_path": "java/lang/security/audit/crypto/use-of-sha1.yaml",
+      "source_sha256": "e0592e0fd0b91d960d4bd9670e0e3b9838a932d473166b98b4de1478a5c28dd6",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "HIGH",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        328
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        328
+      ],
+      "rule_id": "use-of-sha224",
+      "source_path": "java/lang/security/audit/crypto/use-of-sha224.yaml",
+      "source_sha256": "10e964021f3766d9b631e1349d3a9a06593b1aa84d1e0daa00a2063e0289924b",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        89
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        89
+      ],
+      "rule_id": "vertx-sqli",
+      "source_path": "java/lang/security/audit/sqli/vertx-sqli.yaml",
+      "source_sha256": "f565f040167f9c19289316cf78a98967e79447f55dcb60f4fed1a703d2a4c605",
+      "technology": [
+        "vertx"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        330
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        330
+      ],
+      "rule_id": "weak-random",
+      "source_path": "java/lang/security/audit/crypto/weak-random.yaml",
+      "source_sha256": "91526e331cdebd023d6094d66cee8682ac0423d5f15d9d238b07f5d2e36bfe7b",
+      "technology": [
+        "java"
+      ]
+    },
+    {
+      "benchmark_relevance": "unknown",
+      "confidence": "LOW",
+      "decision": "NEEDS_EVIDENCE",
+      "declared_cwes": [
+        79
+      ],
+      "evidence": [],
+      "mode": "search",
+      "notes": "",
+      "rationale": "",
+      "reason_codes": [
+        "INSUFFICIENT_EVIDENCE"
+      ],
+      "reviewed_cwes": [
+        79
+      ],
+      "rule_id": "xssrequestwrapper-is-insecure",
+      "source_path": "java/lang/security/audit/xssrequestwrapper-is-insecure.yaml",
+      "source_sha256": "22b0d85d11f301a0bd5f3b41fa6b8ea81a9bd2f41de570f3f568e26a89c35ee2",
+      "technology": [
+        "java"
+      ]
+    }
+  ],
+  "schema_version": 1,
+  "status": "in_progress",
+  "upstream_commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be"
+}

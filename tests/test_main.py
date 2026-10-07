@@ -5,6 +5,7 @@ from owasp_audit import AuditError, AuditResult
 from semgrep_compat import CompatError, CompatResult
 from semgrep_controls import ControlError, ControlResult
 from semgrep_fixtures import FixtureError, FixtureResult
+from semgrep_review import ReviewError, ReviewResult
 from semgrep_rules import InventoryError, InventoryResult
 
 
@@ -425,3 +426,94 @@ def test_main_reports_semgrep_control_failure(monkeypatch, capsys) -> None:
     error = capsys.readouterr().err
     assert "CONTROL_STATUS=failed" in error
     assert "fixture hash mismatch" in error
+
+
+def review_result(path: str = "review.json") -> ReviewResult:
+    return ReviewResult(
+        status="completed",
+        upstream_commit="a" * 40,
+        review_count=48,
+        include_count=0,
+        exclude_count=0,
+        needs_evidence_count=48,
+        decision_counts={
+            "EXCLUDE": 0,
+            "INCLUDE_DEVELOPMENT": 0,
+            "NEEDS_EVIDENCE": 48,
+        },
+        include_counts_by_cwe={78: 0, 89: 0},
+        review_path=path,
+    )
+
+
+def test_main_initializes_semgrep_review(monkeypatch, capsys) -> None:
+    def fake_init_review(inventory_path, output_path) -> ReviewResult:
+        assert inventory_path == Path("inventory.json")
+        assert output_path == Path("review.json")
+        return review_result()
+
+    monkeypatch.setattr(cli, "init_review", fake_init_review)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "init-review",
+            "--inventory",
+            "inventory.json",
+            "--output",
+            "review.json",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "REVIEW_STATUS=completed" in output
+    assert "NEEDS_EVIDENCE=48" in output
+
+
+def test_main_validates_semgrep_review(monkeypatch, capsys) -> None:
+    def fake_validate_review(inventory_path, review_path) -> ReviewResult:
+        assert inventory_path == Path("inventory.json")
+        assert review_path == Path("review.json")
+        return review_result()
+
+    monkeypatch.setattr(cli, "validate_review", fake_validate_review)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-review",
+            "--inventory",
+            "inventory.json",
+            "--review",
+            "review.json",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "RULES=48" in output
+    assert "INCLUDE_DEVELOPMENT=0" in output
+
+
+def test_main_reports_semgrep_review_failure(monkeypatch, capsys) -> None:
+    def fail_review(inventory_path, review_path) -> ReviewResult:
+        raise ReviewError("review identities do not match")
+
+    monkeypatch.setattr(cli, "validate_review", fail_review)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-review",
+            "--inventory",
+            "inventory.json",
+            "--review",
+            "review.json",
+        ]
+    )
+
+    assert exit_code == 1
+    error = capsys.readouterr().err
+    assert "REVIEW_STATUS=failed" in error
+    assert "review identities do not match" in error
