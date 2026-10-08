@@ -31,3 +31,5 @@ artifacts/
 
 # Downloaded tokenizer assets
 .cache/
+
+.pytest-*/

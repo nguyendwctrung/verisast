@@ -165,18 +165,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/jboss/security/session_sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited corpus contains no org.jboss imports and no Session.connection().prepareStatement sequence.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires the JBoss-specific Session.connection().prepareStatement query construction sequence, which does not occur in the audited Benchmark corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         89
@@ -189,18 +199,29 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/formatted-sql-string.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "HttpServletRequest, java.sql.Statement, PreparedStatement, and JdbcTemplate occur in the audited source corpus.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule models servlet-controlled strings flowing through SQL construction into JDBC and related SQL execution APIs used throughout OWASP Benchmark Java.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         89
@@ -213,18 +234,32 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/hibernate-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "src/main/java/org/owasp/benchmark/helpers/HibernateUtil.java",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "pom.xml declares hibernate-core and hibernate-entitymanager 3.6.10.Final.",
+          "type": "dependency_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "OWASP Benchmark includes Hibernate 3.6 and invokes Session.createQuery with a String parameter through HibernateUtil.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         89
@@ -333,18 +368,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/jdbc-sql-formatted-string.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "JdbcTemplate usage occurs in 173 audited Java source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Measure whether the same-file JdbcTemplate construction constraint prevents matches in Benchmark testcases.",
+      "rationale": "JdbcTemplate SQL operations occur throughout the Benchmark corpus, so the rule is retained for development coverage measurement despite its same-scope construction constraint.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         89
@@ -357,18 +402,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/jdbc-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "JDBC-related patterns occur in 844 files and SQL execution patterns occur in 327 files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The Benchmark corpus extensively uses java.sql.Statement and SQL execution methods covered by this rule.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         89
@@ -381,18 +436,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/jdo-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Search for javax.jdo imports returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires javax.jdo Query or PersistenceManager APIs, which do not occur in the audited OWASP Benchmark Java source corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
@@ -429,18 +493,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/jpa-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Searches for EntityManager, javax.persistence, and jakarta.persistence returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires JPA EntityManager query APIs, which do not occur in the audited OWASP Benchmark Java source corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
@@ -599,18 +672,32 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/spring/security/audit/spring-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "JdbcTemplate usage occurs in 173 audited Java source files.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "pom.xml declares spring-jdbc 5.3.39.",
+          "type": "dependency_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "Spring JDBC is an explicit Benchmark dependency and JdbcTemplate SQL calls occur across the testcase corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         89
@@ -720,18 +807,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/tainted-sql-from-http-request.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The corpus uses HttpServletRequest together with Statement, PreparedStatement, and JdbcTemplate SQL sinks.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule directly models servlet request sources flowing into JDBC and Spring SQL sinks used by OWASP Benchmark Java.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         89
@@ -747,18 +844,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/aws-lambda/security/tainted-sql-string.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Search for AWS Lambda APIs and RequestHandler returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires an AWS Lambda handler event and Context source, while the audited Benchmark corpus does not use AWS Lambda APIs.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
@@ -771,18 +877,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/spring/security/injection/tainted-sql-string.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "DataBaseServer.java is the only inspected Spring controller and has no matching annotated-parameter-to-SQL construction flow.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires SQL-tainted values originating from Spring MVC annotated parameters, while Benchmark SQL testcases use servlet request sources and the inspected controller has no matching flow.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         89
@@ -795,18 +910,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/aws-lambda/security/tainted-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Search for AWS Lambda APIs and RequestHandler returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires an AWS Lambda handler event and Context source, while the audited Benchmark corpus does not use AWS Lambda APIs.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
@@ -870,18 +994,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/turbine-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Search for org.apache.turbine imports returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires Apache Turbine APIs, which do not occur in the audited OWASP Benchmark Java source corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
@@ -1110,18 +1243,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         89
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/sqli/vertx-sqli.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Search for io.vertx imports returned zero audited source files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires Vert.x SQL APIs, which do not occur in the audited OWASP Benchmark Java source corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT"
       ],
       "reviewed_cwes": [
         89
