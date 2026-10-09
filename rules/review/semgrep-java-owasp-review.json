@@ -634,18 +634,29 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         79
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/xss/no-direct-response-writer.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited testcase corpus contains 1,353 files with servlet request-input calls, 2,683 files with response getWriter calls, and 1,298 files containing both a servlet source model and response-writer sink model.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The taint rule models servlet request data flowing into response writers and output streams. Both source and sink models occur extensively in the Benchmark testcase corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         79
@@ -683,18 +694,29 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         79
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/servletresponse-writer-xss.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited testcase corpus contains 1,353 files with servlet request-input calls, 2,683 files with response getWriter calls, and 1,298 files containing both source and response-writer sink models.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule targets direct HttpServletRequest parameter data written through HttpServletResponse writers, and the required servlet APIs are prevalent in the Benchmark testcase corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         79
@@ -779,18 +801,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         79
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/spring/security/injection/tainted-html-string.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited testcase corpus contains zero Spring request-source annotations and zero Spring ResponseEntity or ResponseBody patterns. The only file combining related Spring patterns is the support file DataBaseServer.java, not a Benchmark testcase.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule requires Spring request annotations and a manually constructed HTML payload flowing into ResponseEntity. That source and sink model does not occur in the audited Benchmark testcases.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         79
@@ -1354,18 +1386,32 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         79
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/xssrequestwrapper-is-insecure.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited corpus contains zero XSSRequestWrapper class references and no matching insecure wrapper implementation.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "semgrep-controls-1.179.0-01",
+          "type": "independent_negative_control"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "The independent negative control passed, but the rule remains inapplicable to the frozen Benchmark corpus.",
+      "rationale": "The rule detects a specific insecure XSSRequestWrapper implementation that is absent from the audited Benchmark corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         79
