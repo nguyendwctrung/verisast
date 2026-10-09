@@ -69,18 +69,29 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         78
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/command-injection-formatted-runtime-call.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited testcase corpus contains 188 Runtime exec files, including 61 files with exec argument concatenation.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule detects formatted or concatenated Runtime execution arguments, and these command construction patterns occur throughout the Benchmark testcase corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         78
@@ -93,18 +104,29 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         78
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/command-injection-process-builder.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited testcase corpus contains 63 ProcessBuilder construction files, 28 command-call files, and 63 start-call files.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule detects nonliteral ProcessBuilder commands and command-shell argument flows used by the Benchmark command-execution testcases.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         78
@@ -320,18 +342,31 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         78
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/java-reverse-shell.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "rules/fixtures/java/java-reverse-shell.java",
+          "type": "independent_control"
+        },
+        {
+          "reference": "The audited corpus contains no Socket construction and no combined socket-input/process reverse-shell sequence.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "The independent negative control passed under Semgrep CE 1.179.0 in run semgrep-controls-1.179.0-01.",
+      "rationale": "The rule detects a specific reverse-shell socket and process sequence that is outside the Benchmark command-injection source model and absent from the audited corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         78
@@ -710,18 +745,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         78
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/tainted-cmd-from-http-request.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited corpus contains 204 testcase files with both servlet request access and Runtime or ProcessBuilder command sinks.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
       "notes": "",
-      "rationale": "",
+      "rationale": "The rule directly models servlet-controlled input reaching Runtime execution or ProcessBuilder sinks used by the Benchmark command-injection testcases.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH"
       ],
       "reviewed_cwes": [
         78
@@ -945,18 +990,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         78
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/spring/security/injection/tainted-system-command.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The audited corpus contains zero files combining a Spring MVC annotated parameter with a Runtime or ProcessBuilder command sink.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
+      "notes": "This exclusion concerns Benchmark applicability, not the general correctness of the upstream rule.",
+      "rationale": "The rule requires command data originating from Spring MVC annotated parameters, while the Benchmark command-injection testcases use servlet request sources and no matching Spring command flow exists.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         78
