@@ -2,12 +2,20 @@ import argparse
 import sys
 from pathlib import Path
 
+from baseline import (
+    BaselineError,
+    BaselineResult,
+    run_owasp_baseline,
+    validate_baseline_run,
+)
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
+from owasp_cohort import CohortError, build_cohort
 from semgrep_compat import CompatError, validate_rules
 from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
 from semgrep_review import ReviewError, ReviewResult, init_review, validate_review
 from semgrep_rules import InventoryError, inventory_rules
+from semgrep_ruleset import RulesetError, build_ruleset
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,6 +33,17 @@ def build_parser() -> argparse.ArgumentParser:
     audit.add_argument("--manifest", type=Path, required=True)
     audit.add_argument("--expected-commit", required=True)
     audit.set_defaults(handler=run_owasp_audit)
+
+    cohort = dataset_commands.add_parser(
+        "build-owasp-cohort",
+        help="Build a provenance-bound OWASP evaluation cohort",
+    )
+    cohort.add_argument("--dataset", type=Path, required=True)
+    cohort.add_argument("--dataset-manifest", type=Path, required=True)
+    cohort.add_argument("--ruleset", type=Path, required=True)
+    cohort.add_argument("--output", type=Path, required=True)
+    cohort.add_argument("--purpose", choices=("development", "reportable"), required=True)
+    cohort.set_defaults(handler=run_owasp_cohort_build)
 
     rules = commands.add_parser("rules", help="Rule workflows")
     rule_commands = rules.add_subparsers(dest="rule_command", required=True)
@@ -88,7 +107,57 @@ def build_parser() -> argparse.ArgumentParser:
     validate_rule_review.add_argument("--review", type=Path, required=True)
     validate_rule_review.set_defaults(handler=run_semgrep_review_validation)
 
+    build_rule_snapshot = rule_commands.add_parser(
+        "build-ruleset",
+        help="Build a reviewed Semgrep ruleset snapshot",
+    )
+    build_rule_snapshot.add_argument("--rules", type=Path, required=True)
+    build_rule_snapshot.add_argument("--inventory", type=Path, required=True)
+    build_rule_snapshot.add_argument("--review", type=Path, required=True)
+    build_rule_snapshot.add_argument("--output", type=Path, required=True)
+    build_rule_snapshot.add_argument("--purpose", choices=("development", "reportable"), required=True)
+    build_rule_snapshot.set_defaults(handler=run_semgrep_ruleset_build)
+
+    baseline = commands.add_parser("baseline", help="Semgrep baseline workflows")
+    baseline_commands = baseline.add_subparsers(dest="baseline_command", required=True)
+    run_baseline = baseline_commands.add_parser("run-owasp", help="Run the OWASP Semgrep baseline")
+    run_baseline.add_argument("--run-id", required=True)
+    run_baseline.add_argument("--purpose", choices=("development", "reportable"), required=True)
+    run_baseline.add_argument("--dataset", type=Path, required=True)
+    run_baseline.add_argument("--dataset-manifest", type=Path, required=True)
+    run_baseline.add_argument("--rules", type=Path, required=True)
+    run_baseline.add_argument("--ruleset", type=Path, required=True)
+    run_baseline.add_argument("--cohort", type=Path, required=True)
+    run_baseline.add_argument("--run-dir", type=Path, required=True)
+    run_baseline.add_argument("--semgrep", required=True)
+    run_baseline.add_argument("--expected-version", required=True)
+    run_baseline.set_defaults(handler=run_baseline_owasp)
+
+    validate_baseline = baseline_commands.add_parser("validate-run", help="Validate an OWASP baseline run")
+    validate_baseline.add_argument("--run-dir", type=Path, required=True)
+    validate_baseline.add_argument("--dataset", type=Path, required=True)
+    validate_baseline.add_argument("--dataset-manifest", type=Path, required=True)
+    validate_baseline.add_argument("--rules", type=Path, required=True)
+    validate_baseline.set_defaults(handler=run_baseline_validation)
+
     return parser
+
+
+def run_owasp_cohort_build(args: argparse.Namespace) -> int:
+    result = build_cohort(
+        dataset_dir=args.dataset,
+        dataset_manifest_path=args.dataset_manifest,
+        ruleset_path=args.ruleset,
+        output_path=args.output,
+        purpose=args.purpose,
+    )
+    print(f"COHORT_STATUS={result.status}")
+    print(f"COHORT_PURPOSE={result.purpose}")
+    print(f"COHORT_REPORTABLE={str(result.reportable).lower()}")
+    print(f"COHORT_UNITS={result.unit_count}")
+    print(f"COHORT_CWES={','.join(str(cwe) for cwe in result.cwes)}")
+    print(f"COHORT={result.output_path}")
+    return 0
 
 
 def run_owasp_audit(args: argparse.Namespace) -> int:
@@ -221,6 +290,75 @@ def print_semgrep_review(result: ReviewResult) -> int:
     return 0
 
 
+def run_semgrep_ruleset_build(args: argparse.Namespace) -> int:
+    result = build_ruleset(
+        rules_dir=args.rules,
+        inventory_path=args.inventory,
+        review_path=args.review,
+        output_path=args.output,
+        purpose=args.purpose,
+    )
+    print(f"RULESET_STATUS={result.status}")
+    print(f"RULESET_PURPOSE={result.purpose}")
+    print(f"RULESET_REPORTABLE={str(result.reportable).lower()}")
+    print(f"RULESET_RULES={result.rule_count}")
+    print(f"RULESET_UNRESOLVED={result.unresolved_count}")
+    print(f"RULESET={result.output_path}")
+    return 0
+
+
+def run_baseline_owasp(args: argparse.Namespace) -> int:
+    result = run_owasp_baseline(
+        run_id=args.run_id,
+        purpose=args.purpose,
+        dataset_dir=args.dataset,
+        dataset_manifest_path=args.dataset_manifest,
+        rules_dir=args.rules,
+        ruleset_path=args.ruleset,
+        cohort_path=args.cohort,
+        run_dir=args.run_dir,
+        semgrep_executable=args.semgrep,
+        expected_version=args.expected_version,
+    )
+    return print_baseline(result)
+
+
+def run_baseline_validation(args: argparse.Namespace) -> int:
+    result = validate_baseline_run(
+        run_dir=args.run_dir,
+        dataset_dir=args.dataset,
+        dataset_manifest_path=args.dataset_manifest,
+        rules_dir=args.rules,
+    )
+    return print_baseline(result)
+
+
+def print_baseline(result: BaselineResult) -> int:
+    print(f"BASELINE_STATUS={result.status}")
+    print(f"RUN_ID={result.run_id}")
+    print(f"PURPOSE={result.purpose}")
+    print(f"REPORTABLE={str(result.reportable).lower()}")
+    print(f"SEMGREP_VERSION={result.semgrep_version}")
+    print(f"RULES={result.rule_count}")
+    print(f"RAW_FINDINGS={result.raw_finding_count}")
+    print(f"NORMALIZED_FINDINGS={result.normalized_finding_count}")
+    print(f"PREDICTED_UNITS={result.predicted_unit_count}")
+    print(f"TP={result.tp}")
+    print(f"FP={result.fp}")
+    print(f"TN={result.tn}")
+    print(f"FN={result.fn}")
+    print(f"PRECISION={_metric_text(result.precision)}")
+    print(f"RECALL={_metric_text(result.recall)}")
+    print(f"F1={_metric_text(result.f1)}")
+    print(f"FPR={_metric_text(result.fpr)}")
+    print(f"MANIFEST={result.manifest_path}")
+    return 0
+
+
+def _metric_text(value: float | None) -> str:
+    return "null" if value is None else f"{value:.10g}"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -233,10 +371,21 @@ def main(argv: list[str] | None = None) -> int:
         FixtureError,
         ControlError,
         ReviewError,
+        RulesetError,
+        CohortError,
+        BaselineError,
     ) as error:
         rule_command = getattr(args, "rule_command", None)
+        baseline_command = getattr(args, "baseline_command", None)
+        dataset_command = getattr(args, "dataset_command", None)
 
-        if rule_command in {"init-review", "validate-review"}:
+        if baseline_command:
+            status = "BASELINE_STATUS=failed"
+        elif dataset_command == "build-owasp-cohort":
+            status = "COHORT_STATUS=failed"
+        elif rule_command == "build-ruleset":
+            status = "RULESET_STATUS=failed"
+        elif rule_command in {"init-review", "validate-review"}:
             status = "REVIEW_STATUS=failed"
         elif rule_command == "validate-controls":
             status = "CONTROL_STATUS=failed"

@@ -1,12 +1,15 @@
 from pathlib import Path
 
 import main as cli
+from baseline import BaselineError, BaselineResult
 from owasp_audit import AuditError, AuditResult
+from owasp_cohort import CohortResult
 from semgrep_compat import CompatError, CompatResult
 from semgrep_controls import ControlError, ControlResult
 from semgrep_fixtures import FixtureError, FixtureResult
 from semgrep_review import ReviewError, ReviewResult
 from semgrep_rules import InventoryError, InventoryResult
+from semgrep_ruleset import RulesetResult
 
 
 def test_main_runs_owasp_audit(monkeypatch, capsys, tmp_path: Path) -> None:
@@ -517,3 +520,36 @@ def test_main_reports_semgrep_review_failure(monkeypatch, capsys) -> None:
     error = capsys.readouterr().err
     assert "REVIEW_STATUS=failed" in error
     assert "review identities do not match" in error
+
+
+def test_main_builds_ruleset_and_cohort(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli, "build_ruleset", lambda **_: RulesetResult("development", "development", False, 11, 25, "ruleset.json"))
+    monkeypatch.setattr(cli, "build_cohort", lambda **_: CohortResult("development", "development", False, 1210, [78, 79, 89], "cohort.json"))
+    assert cli.main(["rules", "build-ruleset", "--rules", "rules", "--inventory", "inventory.json", "--review", "review.json", "--output", "ruleset.json", "--purpose", "development"]) == 0
+    assert cli.main(["dataset", "build-owasp-cohort", "--dataset", "dataset", "--dataset-manifest", "manifest.json", "--ruleset", "ruleset.json", "--output", "cohort.json", "--purpose", "development"]) == 0
+    output = capsys.readouterr().out
+    assert "RULESET_RULES=11" in output
+    assert "COHORT_UNITS=1210" in output
+
+
+def baseline_result() -> BaselineResult:
+    return BaselineResult("completed", "run-1", "development", False, "1.179.0", 11, 10, 8, 5, 3, 2, 4, 1, 0.6, 0.75, 2 / 3, 1 / 3, "manifest.json")
+
+
+def test_main_runs_and_validates_baseline(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli, "run_owasp_baseline", lambda **_: baseline_result())
+    monkeypatch.setattr(cli, "validate_baseline_run", lambda **_: baseline_result())
+    common = ["--dataset", "dataset", "--dataset-manifest", "dataset.json", "--rules", "rules"]
+    assert cli.main(["baseline", "run-owasp", "--run-id", "run-1", "--purpose", "development", *common, "--ruleset", "ruleset.json", "--cohort", "cohort.json", "--run-dir", "run", "--semgrep", "semgrep", "--expected-version", "1.179.0"]) == 0
+    assert cli.main(["baseline", "validate-run", "--run-dir", "run", *common]) == 0
+    output = capsys.readouterr().out
+    assert "BASELINE_STATUS=completed" in output
+    assert "REPORTABLE=false" in output
+    assert "TP=3" in output
+
+
+def test_main_reports_baseline_failure(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(cli, "validate_baseline_run", lambda **_: (_ for _ in ()).throw(BaselineError("artifact mismatch")))
+    exit_code = cli.main(["baseline", "validate-run", "--run-dir", "run", "--dataset", "dataset", "--dataset-manifest", "dataset.json", "--rules", "rules"])
+    assert exit_code == 1
+    assert "BASELINE_STATUS=failed" in capsys.readouterr().err
