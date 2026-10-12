@@ -4,10 +4,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$semgrep = Join-Path $projectRoot ".venv\Scripts\semgrep.exe"
+$semgrep = "semgrep"
 
-if (-not (Test-Path -LiteralPath $semgrep)) {
-    throw "Semgrep executable not found: $semgrep"
+if (-not (Get-Command $semgrep -ErrorAction SilentlyContinue)) {
+    throw "Semgrep CLI command not found: $semgrep"
 }
 
 $observedVersion = (& $semgrep --version).Trim()

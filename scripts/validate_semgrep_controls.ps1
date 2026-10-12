@@ -14,16 +14,14 @@ if (-not $RunId) {
     )
 }
 
-$semgrep = Join-Path `
-    $projectRoot `
-    ".venv\Scripts\semgrep.exe"
+$semgrep = "semgrep"
 
 $runDir = Join-Path `
     $projectRoot `
     ("artifacts\semgrep-controls\{0}" -f $RunId)
 
-if (-not (Test-Path -LiteralPath $semgrep)) {
-    throw "Semgrep executable not found: $semgrep"
+if (-not (Get-Command $semgrep -ErrorAction SilentlyContinue)) {
+    throw "Semgrep CLI command not found: $semgrep"
 }
 
 & python (Join-Path $projectRoot "src\main.py") `
