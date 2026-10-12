@@ -12,9 +12,20 @@ from semgrep_normalize import NormalizeError, normalize_findings
 from semgrep_rules import sha256_file
 from semgrep_ruleset import RulesetError, load_ruleset
 from semgrep_scan import ScanError, scan_rules
+from source_context import (
+    ContextError,
+    ContextResult,
+    build_contexts,
+    validate_contexts,
+)
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+LEGACY_SCHEMA_VERSION = 1
+CONTEXT_BEFORE = 20
+CONTEXT_AFTER = 20
+CONTEXT_MAX_LINES = 120
 ScanRunner = Callable[..., list[dict[str, object]]]
+ContextBuilder = Callable[..., ContextResult]
 
 
 class BaselineError(ValueError):
@@ -55,6 +66,7 @@ def run_owasp_baseline(
     semgrep_executable: str,
     expected_version: str,
     scan_runner: ScanRunner = scan_rules,
+    context_builder: ContextBuilder = build_contexts,
 ) -> BaselineResult:
     if not run_id.strip() or any(character in run_id for character in "\\/:"):
         raise BaselineError("invalid run ID")
@@ -69,6 +81,7 @@ def run_owasp_baseline(
         "inputs": "pending",
         "scan": "pending",
         "normalize": "pending",
+        "context": "pending",
         "evaluate": "pending",
     }
     manifest: dict[str, Any] = {
@@ -131,6 +144,26 @@ def run_owasp_baseline(
         manifest["stages"]["normalize"] = "completed"
         manifest["normalized"] = _artifact(run_dir, findings_path)
         _write_json(manifest_path, manifest)
+        contexts_path = run_dir / "contexts" / "contexts.jsonl"
+        context_result = context_builder(
+            dataset_dir=dataset_dir,
+            findings_path=findings_path,
+            output_path=contexts_path,
+            before=CONTEXT_BEFORE,
+            after=CONTEXT_AFTER,
+            max_lines=CONTEXT_MAX_LINES,
+        )
+        manifest["stages"]["context"] = "completed"
+        manifest["context"] = {
+            "artifact": _artifact(run_dir, contexts_path),
+            "count": context_result.context_count,
+            "policy": {
+                "before": CONTEXT_BEFORE,
+                "after": CONTEXT_AFTER,
+                "max_lines": CONTEXT_MAX_LINES,
+            },
+        }
+        _write_json(manifest_path, manifest)
         matches, metrics = evaluate_findings(cohort, findings, raw_count)
         matches_path = run_dir / "evaluation" / "matches.jsonl"
         metrics_path = run_dir / "evaluation" / "metrics.json"
@@ -145,6 +178,7 @@ def run_owasp_baseline(
             "rules": len(cast(list[object], ruleset["rules"])),
             "raw_findings": raw_count,
             "normalized_findings": len(findings),
+            "contexts": context_result.context_count,
             "predicted_units": metrics["predicted_unit_count"],
         }
         manifest["reportable"] = purpose == "reportable"
@@ -152,7 +186,12 @@ def run_owasp_baseline(
         manifest["completed_at"] = datetime.now(timezone.utc).isoformat()
         _write_json(manifest_path, manifest)
         return _result(manifest, metrics, manifest_path)
-    except (BaselineError, CohortError, EvaluationError, NormalizeError, RulesetError, ScanError, KeyError, OSError, ValueError) as error:
+    except (BaselineError, CohortError, ContextError, EvaluationError, NormalizeError, RulesetError, ScanError, KeyError, OSError, ValueError) as error:
+        if (
+            manifest["stages"]["normalize"] == "completed"
+            and manifest["stages"]["context"] == "pending"
+        ):
+            manifest["stages"]["context"] = "failed"
         manifest["status"] = "failed"
         manifest["reportable"] = False
         manifest["error"] = str(error)
@@ -170,8 +209,9 @@ def validate_baseline_run(
     run_dir = run_dir.resolve()
     manifest_path = run_dir / "manifest.json"
     manifest = _read_object(manifest_path, "baseline manifest")
-    if manifest.get("schema_version") != SCHEMA_VERSION or manifest.get("status") != "completed":
-        raise BaselineError("baseline run is not a completed schema version 1 run")
+    schema_version = manifest.get("schema_version")
+    if schema_version not in {LEGACY_SCHEMA_VERSION, SCHEMA_VERSION} or manifest.get("status") != "completed":
+        raise BaselineError("baseline run is not a completed supported schema run")
     inputs = manifest.get("inputs")
     if not isinstance(inputs, dict):
         raise BaselineError("baseline input records are missing")
@@ -204,6 +244,8 @@ def validate_baseline_run(
     stored_findings = _read_jsonl(run_dir / str(normalized_record["path"]))
     if stored_findings != findings:
         raise BaselineError("normalized findings do not match raw evidence")
+    if schema_version == SCHEMA_VERSION:
+        _validate_context(run_dir, manifest, dataset_dir, normalized_record, len(findings))
     matches, metrics = evaluate_findings(cohort, findings, raw_count)
     if _read_jsonl(run_dir / str(evaluation["matches"]["path"])) != matches:
         raise BaselineError("evaluation matches do not match normalized findings")
@@ -216,6 +258,46 @@ def validate_baseline_run(
     ):
         raise BaselineError("invalid reportable baseline claim")
     return _result(manifest, metrics, manifest_path)
+
+
+def _validate_context(
+    run_dir: Path,
+    manifest: dict[str, Any],
+    dataset_dir: Path,
+    normalized_record: dict[object, object],
+    finding_count: int,
+) -> None:
+    stages = manifest.get("stages")
+    context = manifest.get("context")
+    if not isinstance(stages, dict) or stages.get("context") != "completed":
+        raise BaselineError("baseline context stage is incomplete")
+    if not isinstance(context, dict):
+        raise BaselineError("baseline context record is missing")
+    artifact = context.get("artifact")
+    policy = context.get("policy")
+    if not isinstance(artifact, dict) or not isinstance(policy, dict):
+        raise BaselineError("baseline context record is invalid")
+    _validate_artifact(run_dir, artifact)
+    before = _context_bound(policy, "before", CONTEXT_BEFORE)
+    after = _context_bound(policy, "after", CONTEXT_AFTER)
+    max_lines = _context_bound(policy, "max_lines", CONTEXT_MAX_LINES)
+    result = validate_contexts(
+        dataset_dir=dataset_dir,
+        findings_path=run_dir / str(normalized_record["path"]),
+        contexts_path=run_dir / str(artifact["path"]),
+        before=before,
+        after=after,
+        max_lines=max_lines,
+    )
+    if context.get("count") != result.context_count or result.context_count != finding_count:
+        raise BaselineError("baseline context count does not match normalized findings")
+
+
+def _context_bound(policy: dict[object, object], name: str, expected: int) -> int:
+    value = policy.get(name)
+    if not isinstance(value, int) or value != expected:
+        raise BaselineError(f"baseline context policy mismatch: {name}")
+    return value
 
 
 def _result(manifest: dict[str, Any], metrics: dict[str, Any], manifest_path: Path) -> BaselineResult:

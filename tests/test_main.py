@@ -4,12 +4,14 @@ import main as cli
 from baseline import BaselineError, BaselineResult
 from owasp_audit import AuditError, AuditResult
 from owasp_cohort import CohortResult
+from semgrep_checkpoint import CheckpointResult
 from semgrep_compat import CompatError, CompatResult
 from semgrep_controls import ControlError, ControlResult
 from semgrep_fixtures import FixtureError, FixtureResult
 from semgrep_review import ReviewError, ReviewResult
 from semgrep_rules import InventoryError, InventoryResult
 from semgrep_ruleset import RulesetResult
+from source_context import ContextResult
 
 
 def test_main_runs_owasp_audit(monkeypatch, capsys, tmp_path: Path) -> None:
@@ -520,6 +522,70 @@ def test_main_reports_semgrep_review_failure(monkeypatch, capsys) -> None:
     error = capsys.readouterr().err
     assert "REVIEW_STATUS=failed" in error
     assert "review identities do not match" in error
+
+
+def test_main_validates_semgrep_checkpoint(monkeypatch, capsys) -> None:
+    def fake_validate_checkpoint(**kwargs) -> CheckpointResult:
+        assert kwargs["cwe"] == 330
+        assert kwargs["dataset"] == Path("dataset")
+        return CheckpointResult(330, 493, 218, 275, 1, {"covered": 218})
+
+    monkeypatch.setattr(cli, "validate_checkpoint", fake_validate_checkpoint)
+
+    exit_code = cli.main(
+        [
+            "rules",
+            "validate-checkpoint",
+            "--cwe",
+            "330",
+            "--dataset",
+            "dataset",
+            "--review",
+            "review.json",
+            "--fixtures",
+            "fixtures.json",
+            "--compatibility",
+            "compatibility.json",
+        ]
+    )
+
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "CHECKPOINT_CWE330=PASS" in output
+    assert "CWE330_TOTAL=493" in output
+    assert "COVERED=218" in output
+
+
+def test_main_builds_source_context(monkeypatch, capsys) -> None:
+    def fake_build_contexts(dataset_dir, findings_path, output_path, **kwargs):
+        assert dataset_dir == Path("dataset")
+        assert findings_path == Path("findings.jsonl")
+        assert kwargs == {"before": 10, "after": 12, "max_lines": 50}
+        return ContextResult(7, output_path, "a" * 64)
+
+    monkeypatch.setattr(cli, "build_contexts", fake_build_contexts)
+    exit_code = cli.main(
+        [
+            "context",
+            "build",
+            "--dataset",
+            "dataset",
+            "--findings",
+            "findings.jsonl",
+            "--output",
+            "contexts.jsonl",
+            "--before",
+            "10",
+            "--after",
+            "12",
+            "--max-lines",
+            "50",
+        ]
+    )
+    assert exit_code == 0
+    output = capsys.readouterr().out
+    assert "CONTEXT_STATUS=completed" in output
+    assert "CONTEXTS=7" in output
 
 
 def test_main_builds_ruleset_and_cohort(monkeypatch, capsys) -> None:

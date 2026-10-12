@@ -5,6 +5,7 @@ import pytest
 
 from baseline import BaselineError, run_owasp_baseline, validate_baseline_run
 from semgrep_rules import sha256_file
+from source_context import ContextError
 
 
 def write_inputs(tmp_path: Path) -> dict[str, Path]:
@@ -113,8 +114,27 @@ def test_run_and_validate_baseline(tmp_path: Path) -> None:
     assert result.tp == 1
     assert result.reportable is False
     assert validated.status == "completed"
+    manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["schema_version"] == 2
+    assert manifest["stages"]["context"] == "completed"
+    assert manifest["counts"]["contexts"] == 1
+    assert manifest["context"]["policy"] == {
+        "after": 20,
+        "before": 20,
+        "max_lines": 120,
+    }
+    assert (run_dir / "contexts" / "contexts.jsonl").is_file()
     metrics_path = run_dir / "evaluation" / "metrics.json"
     metrics_path.write_text("{}", encoding="utf-8")
+    with pytest.raises(BaselineError, match="artifact mismatch"):
+        validate_baseline_run(
+            run_dir,
+            inputs["dataset"],
+            inputs["dataset_manifest"],
+            inputs["rules"],
+        )
+    contexts_path = run_dir / "contexts" / "contexts.jsonl"
+    contexts_path.write_text("{}\n", encoding="utf-8")
     with pytest.raises(BaselineError, match="artifact mismatch"):
         validate_baseline_run(
             run_dir,
@@ -144,3 +164,75 @@ def test_scanner_failure_writes_failed_manifest(tmp_path: Path) -> None:
     manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["status"] == "failed"
     assert not (run_dir / "normalized" / "findings.jsonl").exists()
+
+
+def test_context_failure_writes_failed_manifest_without_evaluation(tmp_path: Path) -> None:
+    inputs = write_inputs(tmp_path)
+
+    def fake_scan(rules_dir, ruleset, source_root, raw_dir, semgrep, version):
+        raw_dir.mkdir(parents=True)
+        raw = raw_dir / "rule.stdout.json"
+        raw.write_text(
+            json.dumps(
+                {
+                    "version": version,
+                    "errors": [],
+                    "results": [
+                        {
+                            "check_id": "rule",
+                            "path": str(inputs["java"]),
+                            "start": {"line": 1, "col": 1},
+                            "end": {"line": 1, "col": 2},
+                            "extra": {
+                                "message": "m",
+                                "severity": "ERROR",
+                            },
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        stderr = raw_dir / "rule.stderr.txt"
+        stderr.write_text("", encoding="utf-8")
+        return [
+            {
+                "rule_identity": "java/rule.yaml::rule",
+                "rule_id": "rule",
+                "rule_path": "java/rule.yaml",
+                "rule_sha256": sha256_file(inputs["rules"] / "java" / "rule.yaml"),
+                "reviewed_cwes": [78],
+                "finding_count": 1,
+                "stdout_path": str(raw),
+                "stdout_sha256": sha256_file(raw),
+                "stderr_path": str(stderr),
+                "stderr_sha256": sha256_file(stderr),
+                "exit_code": 0,
+            }
+        ]
+
+    def fail_context(*args, **kwargs):
+        raise ContextError("context failed")
+
+    run_dir = tmp_path / "failed-context"
+    with pytest.raises(BaselineError, match="context failed"):
+        run_owasp_baseline(
+            "run-3",
+            "development",
+            inputs["dataset"],
+            inputs["dataset_manifest"],
+            inputs["rules"],
+            inputs["ruleset"],
+            inputs["cohort"],
+            run_dir,
+            "semgrep",
+            "1.179.0",
+            fake_scan,
+            fail_context,
+        )
+    manifest = json.loads((run_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["status"] == "failed"
+    assert manifest["stages"]["normalize"] == "completed"
+    assert manifest["stages"]["context"] == "failed"
+    assert manifest["stages"]["evaluate"] == "pending"
+    assert not (run_dir / "evaluation" / "metrics.json").exists()

@@ -21,22 +21,19 @@
   "inventory_sha256": "d2e108b38f58617a9e6cab0c5287d0dbfabb2c4396eeebf960ea5c337f47f481",
   "reviews": [
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/ssl/avoid-implementing-custom-digests.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no class extending MessageDigest.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires a custom MessageDigest subclass, which is absent from all 246 CWE-327 testcases.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "avoid-implementing-custom-digests",
       "source_path": "java/lang/security/audit/crypto/ssl/avoid-implementing-custom-digests.yaml",
       "source_sha256": "70f064ac02aaac37ddccf58f9e95653a31c5d9719925fcea351810a704a40f69",
@@ -45,22 +42,20 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "INCLUDE_DEVELOPMENT",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/cbc-padding-oracle.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains 246 testcases: 130 vulnerable and 116 non-vulnerable.", "type": "benchmark_ground_truth_review"},
+        {"reference": "Ninety-seven vulnerable files use the covered DES/CBC/PKCS5Padding literal; no non-vulnerable file uses CBC/PKCS5Padding.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "Retain for development measurement; 33 vulnerable configuration-driven DESede/ECB cases remain outside this rule's literal pattern.",
+      "rationale": "The rule covers the CBC/PKCS5Padding construction used by 97 vulnerable testcases without matching the AES/CCM and AES/GCM non-vulnerable cases.",
+      "reason_codes": ["CWE_ALIGNED", "BENCHMARK_TECHNOLOGY_MATCH", "GENERIC_JAVA_SECURITY"],
+      "reviewed_cwes": [327],
       "rule_id": "cbc-padding-oracle",
       "source_path": "java/lang/security/audit/cbc-padding-oracle.yaml",
       "source_sha256": "456efa88e5f7a8e0de19b1ce2209867d51752c65f06bbf9e12911de3d1ffcc25",
@@ -139,18 +134,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         614
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/cookie-missing-secure-flag.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 67 CWE-614 cookie testcases: 36 vulnerable and 31 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "All 36 vulnerable testcase files call setSecure(false), all 31 non-vulnerable testcase files call setSecure(true), and all 67 files add the cookie to the response.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. Some vulnerable testcase files also configure a separate setup cookie securely, so matching must remain bound to the same cookie variable.",
+      "rationale": "The rule distinguishes explicit insecure cookie configuration and missing secure flags from secure cookie setup using the same APIs and variable relationships present throughout the frozen CWE-614 cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         614
@@ -163,22 +173,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/ecb-cipher.java", "type": "upstream_fixture"},
+        {"reference": "The corpus passes DESede/ECB through a configuration variable rather than an ECB literal argument to Cipher.getInstance.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion records pattern applicability, not the safety of ECB.",
+      "rationale": "The rule requires an ECB-matching getInstance argument, while the corpus's ECB value is retrieved dynamically and is not matched by this pattern.",
+      "reason_codes": ["OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "ecb-cipher",
       "source_path": "java/lang/security/audit/crypto/ecb-cipher.yaml",
       "source_sha256": "5814655dc47df11b01b8bdca6c8d2ae6b6f0872215d2ed4003da37bb587b9cd5",
@@ -294,18 +301,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         22
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/httpservlet-path-traversal.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 268 CWE-22 servlet testcases: 133 vulnerable and 135 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "The CWE-22 testcase corpus uses HttpServletRequest-derived input with java.io file operations covered by the rule source and sink models.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. Final inclusion remains subject to the frozen reportable ruleset decision.",
+      "rationale": "The rule models servlet-controlled input flowing into Java file operations, matching the source model, sink APIs, and CWE-22 testcase structure in the frozen OWASP Benchmark corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         22
@@ -318,22 +340,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/java-jwt/security/jwt-none-alg.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no Auth0 java-jwt APIs or Algorithm.none usage.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires Auth0 java-jwt none-algorithm APIs, which are absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "java-jwt-none-alg",
       "source_path": "java/java-jwt/security/jwt-none-alg.yaml",
       "source_sha256": "42d52e21df87207ecf3fba6482cce08a1ac02173a0ff9c2e8f20b7ad9b3b2769",
@@ -379,18 +398,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         22
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/jax-rs/security/jax-rs-path-traversal.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "Searches for javax.ws.rs, jakarta.ws.rs, and JAX-RS @Path usage returned zero Java source files in the frozen OWASP corpus.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "This exclusion concerns applicability to the frozen OWASP corpus, not the general correctness of the upstream rule.",
+      "rationale": "The rule requires a JAX-RS PathParam source and JAX-RS resource method, while the frozen OWASP Benchmark Java corpus contains no JAX-RS APIs or resource classes.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         22
@@ -504,22 +533,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/jjwt/security/jwt-none-alg.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no JJWT APIs or Jwts.builder usage.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires JJWT builder APIs, which are absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "jjwt-none-alg",
       "source_path": "java/jjwt/security/jwt-none-alg.yaml",
       "source_sha256": "fc6f8a4dca1eb951a8e114bbd2977f53fbb06316d85945573b76fd7939b81801",
@@ -561,18 +587,27 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         90
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/ldap-entry-poisoning.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP CWE-90 corpus constructs default SearchControls objects and contains no setReturningObjFlag(true) call or constructor that enables returning LDAP objects.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "This exclusion concerns applicability to the frozen OWASP corpus, not the general security value of the upstream rule.",
+      "rationale": "The rule detects LDAP object-returning configurations that can enable entry poisoning, while the Benchmark CWE-90 testcases exercise LDAP filter injection and never enable returning objects.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         90
@@ -585,18 +620,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         90
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/ldap-injection.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 59 CWE-90 LDAP-search testcases: 27 vulnerable and 32 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "All 59 CWE-90 testcase files invoke DirContext or InitialDirContext search operations with constructed LDAP filters.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement and compare its broader non-constant-query behavior with the servlet-taint rule before final ruleset selection.",
+      "rationale": "The rule covers the DirContext and InitialDirContext search APIs and non-constant LDAP filters used throughout the frozen CWE-90 Benchmark cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         90
@@ -609,22 +659,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/md5-used-as-password.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no MD5 digest flowing to a password-named method.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The CWE-328 MD5 cohort is handled separately and does not satisfy this password-specific sink model.",
+      "rationale": "The rule's MD5-to-password taint pattern is absent from the frozen CWE-327 corpus.",
+      "reason_codes": ["OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "md5-used-as-password",
       "source_path": "java/lang/security/audit/md5-used-as-password.yaml",
       "source_sha256": "5f39d44a2da3bcbb246046660bc63921c601314a9e0bc26d98e20725ef5db0be",
@@ -670,22 +717,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/no-null-cipher.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no NullCipher construction.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires NullCipher, which is absent from all CWE-327 testcases.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "no-null-cipher",
       "source_path": "java/lang/security/audit/crypto/no-null-cipher.yaml",
       "source_sha256": "dc4c66784f5c2d40e92b8fe0984a6066fd0df26aa540e83c1b9febd0b2103c5d",
@@ -836,18 +880,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         90
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/tainted-ldapi-from-http-request.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 59 servlet-based CWE-90 LDAP-search testcases: 27 vulnerable and 32 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "Every CWE-90 testcase combines an HttpServletRequest source model with a DirContext or InitialDirContext search sink model covered by the rule.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. The upstream fixture is drawn from OWASP Benchmark patterns and includes vulnerable and safe examples.",
+      "rationale": "The rule directly models servlet-controlled data flowing into the LDAP search APIs used by every testcase in the frozen CWE-90 cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         90
@@ -860,18 +919,37 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         501
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/tainted-session-from-http-request.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 126 CWE-501 servlet testcases: 83 vulnerable and 43 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "All 126 CWE-501 testcase files combine HttpServletRequest-derived input with HttpSession setAttribute or putValue sinks covered by the rule.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "Semgrep CE 1.179.0 loaded and executed the rule without scanner or Pro-only errors in compatibility run semgrep-compat-1.179.0-fix1.",
+          "type": "compatibility_run"
+        }
+      ],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. The rule declares interfile mode, so its effective CE coverage and same-file behavior must be measured before final reportable ruleset selection.",
+      "rationale": "The rule models servlet-controlled values flowing into the session attribute APIs used by every testcase in the frozen CWE-501 cohort, and it executes under the pinned Semgrep CE version.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         501
@@ -1056,18 +1134,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "MEDIUM",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         643
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/tainted-xpath-from-http-request.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 35 CWE-643 servlet testcases: 15 vulnerable and 20 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "All 35 CWE-643 testcase files combine HttpServletRequest-derived input with XPath evaluate or compile-and-evaluate sink APIs covered by the rule.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "taint",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. The upstream fixture is drawn from OWASP Benchmark patterns and includes vulnerable and safe examples.",
+      "rationale": "The rule directly models servlet-controlled data flowing into XPath evaluation APIs used by every testcase in the frozen CWE-643 cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         643
@@ -1113,22 +1206,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/use-of-aes-ecb.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no AES/ECB literal; vulnerable cases use DES/CBC or configuration-driven DESede/ECB.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires an AES/ECB literal that does not occur in the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "use-of-aes-ecb",
       "source_path": "java/lang/security/audit/crypto/use-of-aes-ecb.yaml",
       "source_sha256": "b10b001760ce2de0c0fa113b9326f54a510b272d7b61e369e7a584ba35838899",
@@ -1137,22 +1227,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/use-of-blowfish.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no Blowfish cipher literal.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires Blowfish, which is absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "use-of-blowfish",
       "source_path": "java/lang/security/audit/crypto/use-of-blowfish.yaml",
       "source_sha256": "1a24cfcd619bc816ed7a3748f87b3c42d87f46f991cc7d9e95849222266456fc",
@@ -1161,22 +1248,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/use-of-default-aes.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no Cipher.getInstance(\"AES\") call without an explicit mode.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires default AES construction, which is absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "use-of-default-aes",
       "source_path": "java/lang/security/audit/crypto/use-of-default-aes.yaml",
       "source_sha256": "d6862d5cfc8a44592a63d180b606a8b9cc0ec9df09140332377714475f1ad12e",
@@ -1185,18 +1269,33 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         328
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/crypto/use-of-md5.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 236 CWE-328 hash testcases: 129 vulnerable and 107 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "Twenty-eight vulnerable CWE-328 testcase files call MessageDigest.getInstance with MD5, while no non-vulnerable testcase uses MD5.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement alongside the SHA-1 rule. Final selection must preserve the frozen algorithm-to-label audit.",
+      "rationale": "The rule directly matches the MessageDigest MD5 API and literal used by a distinct vulnerable subset of the frozen CWE-328 cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         328
@@ -1209,18 +1308,28 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         328
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/crypto/use-of-md5-digest-utils.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen CWE-328 corpus contains no DigestUtils, getMd5Digest, or md5Hex usage; its MD5 cases use java.security.MessageDigest.",
+          "type": "benchmark_api_review"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "This exclusion concerns applicability to the frozen OWASP corpus, not the general security value of the upstream rule.",
+      "rationale": "The rule requires Apache Commons DigestUtils MD5 APIs that do not occur in the frozen CWE-328 Benchmark corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         328
@@ -1233,22 +1342,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/use-of-rc2.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no RC2 cipher literal.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires RC2, which is absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "use-of-rc2",
       "source_path": "java/lang/security/audit/crypto/use-of-rc2.yaml",
       "source_sha256": "eea11ee447228a1855f7a203dbcbeebe2f279d92a095aaff215c1f433bd13ad0",
@@ -1257,22 +1363,19 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
-      "declared_cwes": [
-        327
+      "decision": "EXCLUDE",
+      "declared_cwes": [327],
+      "evidence": [
+        {"reference": "java/lang/security/audit/crypto/use-of-rc4.java", "type": "upstream_fixture"},
+        {"reference": "The frozen CWE-327 corpus contains no RC4 cipher literal.", "type": "benchmark_api_review"}
       ],
-      "evidence": [],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
-      "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
-      ],
-      "reviewed_cwes": [
-        327
-      ],
+      "notes": "The exclusion is specific to the frozen OWASP corpus.",
+      "rationale": "The rule requires RC4, which is absent from the corpus.",
+      "reason_codes": ["TECHNOLOGY_NOT_PRESENT", "OUT_OF_BENCHMARK_SCOPE"],
+      "reviewed_cwes": [327],
       "rule_id": "use-of-rc4",
       "source_path": "java/lang/security/audit/crypto/use-of-rc4.yaml",
       "source_sha256": "335f23524ab959d7274546b3e5f81a91dc011c84ef9813cb5ebbc2d0ad8c4dba",
@@ -1281,18 +1384,37 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         328
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/crypto/use-of-sha1.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 236 CWE-328 hash testcases: 129 vulnerable and 107 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "Eighty-five vulnerable CWE-328 testcase files call MessageDigest.getInstance with SHA1, while non-vulnerable cases use SHA-256, SHA-384, or SHA-512.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "The project-owned SHA-1 negative control passed in run semgrep-controls-1.179.0-01 with zero findings and zero scanner errors.",
+          "type": "independent_negative_control"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. The upstream fixture is positive-only, so the independent stronger-hash control is required evidence.",
+      "rationale": "The rule directly matches the MessageDigest SHA1 literal used by the largest vulnerable algorithm subset of the frozen CWE-328 cohort and excludes the stronger algorithms used by non-vulnerable cases.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         328
@@ -1305,18 +1427,32 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "not_relevant",
       "confidence": "HIGH",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "EXCLUDE",
       "declared_cwes": [
         328
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/crypto/use-of-sha224.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen CWE-328 corpus contains no SHA-224, SHA3-224, SHA-512/224, or related DigestUtils usage.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "The project-owned SHA-224 negative control passed in run semgrep-controls-1.179.0-01 with zero findings and zero scanner errors.",
+          "type": "independent_negative_control"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "This exclusion concerns applicability to the frozen OWASP corpus. The upstream fixture is positive-only and is supplemented by the independent negative control.",
+      "rationale": "The rule detects SHA-224-family APIs and literals that do not occur in the frozen CWE-328 Benchmark corpus.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "TECHNOLOGY_NOT_PRESENT",
+        "OUT_OF_BENCHMARK_SCOPE"
       ],
       "reviewed_cwes": [
         328
@@ -1362,18 +1498,37 @@
       ]
     },
     {
-      "benchmark_relevance": "unknown",
+      "benchmark_relevance": "relevant",
       "confidence": "LOW",
-      "decision": "NEEDS_EVIDENCE",
+      "decision": "INCLUDE_DEVELOPMENT",
       "declared_cwes": [
         330
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "reference": "java/lang/security/audit/crypto/weak-random.java",
+          "type": "upstream_fixture"
+        },
+        {
+          "reference": "The frozen OWASP corpus contains 493 CWE-330 weak-randomness testcases: 218 vulnerable and 275 non-vulnerable.",
+          "type": "benchmark_ground_truth_review"
+        },
+        {
+          "reference": "All 218 vulnerable CWE-330 testcase files use a covered weak RNG: 193 use new java.util.Random(...).<method>(...) and 25 use java.lang.Math.random(...). All 275 non-vulnerable files use java.security.SecureRandom and none use a covered weak RNG.",
+          "type": "benchmark_api_review"
+        },
+        {
+          "reference": "Compatibility run semgrep-compat-1.179.0-fix1 classified the rule as COMPATIBLE with zero scanner errors.",
+          "type": "semgrep_compatibility"
+        }
+      ],
       "mode": "search",
-      "notes": "",
-      "rationale": "",
+      "notes": "Retain for development measurement. Final selection must preserve the frozen weak-RNG-to-label audit.",
+      "rationale": "The rule exactly covers the weak RNG APIs used by every vulnerable testcase while excluding the SecureRandom API used by every non-vulnerable testcase in the frozen CWE-330 cohort.",
       "reason_codes": [
-        "INSUFFICIENT_EVIDENCE"
+        "CWE_ALIGNED",
+        "BENCHMARK_TECHNOLOGY_MATCH",
+        "GENERIC_JAVA_SECURITY"
       ],
       "reviewed_cwes": [
         330

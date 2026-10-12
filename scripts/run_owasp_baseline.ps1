@@ -11,7 +11,7 @@ param(
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $python = Join-Path $projectRoot ".venv\Scripts\python.exe"
-$semgrep = Join-Path $projectRoot "scripts\pysemgrep_launcher.py"
+$semgrep = "semgrep"
 $dataset = Join-Path $projectRoot "datasets\raw\owasp-benchmark-java-v1.2"
 $datasetManifest = Join-Path $projectRoot "datasets\manifests\owasp-benchmark-java-v1.2.json"
 $rules = Join-Path $projectRoot "rules\upstream\semgrep-rules"

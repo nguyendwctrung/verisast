@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from semgrep_compat import CommandResult
-from semgrep_scan import ScanError, scan_rules
+from semgrep_scan import ScanError, _command_prefix, scan_rules
 
 
 def ruleset(rule_hash: str) -> dict[str, object]:
@@ -128,45 +128,11 @@ def test_scan_rules_accepts_version_written_to_stderr(tmp_path: Path) -> None:
     assert len(scans) == 2
 
 
-def test_scan_rules_uses_python_for_script_launcher(tmp_path: Path) -> None:
-    rules_dir = tmp_path / "rules"
-    (rules_dir / "java").mkdir(parents=True)
-    for name in ("rule.yaml", "other.yaml"):
-        (rules_dir / "java" / name).write_text("rule", encoding="utf-8")
-    source_root = tmp_path / "source"
-    source_root.mkdir()
-    launcher = tmp_path / "launcher.py"
-    launcher.write_text("pass\n", encoding="utf-8")
-    calls: list[list[str]] = []
+@pytest.mark.parametrize("command", ["semgrep.exe", "pysemgrep_launcher.py", "C:/tools/semgrep"])
+def test_command_prefix_rejects_non_cli_semgrep_commands(command: str) -> None:
+    with pytest.raises(ScanError, match="semgrep CLI command"):
+        _command_prefix(command)
 
-    def runner(command: list[str], cwd: Path | None) -> CommandResult:
-        calls.append(command)
-        if command[-1] == "--version":
-            return CommandResult(0, "1.179.0", "", 1)
-        return CommandResult(
-            0,
-            json.dumps(
-                {
-                    "version": "1.179.0",
-                    "results": [],
-                    "errors": [],
-                    "paths": {"scanned": []},
-                }
-            ),
-            "",
-            1,
-        )
 
-    scan_rules(
-        rules_dir,
-        ruleset("0" * 64),
-        source_root,
-        tmp_path / "raw",
-        str(launcher),
-        "1.179.0",
-        runner,
-        verify_hashes=False,
-    )
-    assert calls[0][1] == str(launcher.resolve())
-    assert calls[0][-1] == "--version"
-    assert calls[1][2] == "scan"
+def test_command_prefix_uses_semgrep_cli() -> None:
+    assert _command_prefix("semgrep") == ["semgrep"]

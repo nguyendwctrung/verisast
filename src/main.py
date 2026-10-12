@@ -10,12 +10,14 @@ from baseline import (
 )
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from owasp_cohort import CohortError, build_cohort
+from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
 from semgrep_compat import CompatError, validate_rules
 from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
 from semgrep_review import ReviewError, ReviewResult, init_review, validate_review
 from semgrep_rules import InventoryError, inventory_rules
 from semgrep_ruleset import RulesetError, build_ruleset
+from source_context import ContextError, build_contexts, validate_contexts
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -106,6 +108,42 @@ def build_parser() -> argparse.ArgumentParser:
     validate_rule_review.add_argument("--inventory", type=Path, required=True)
     validate_rule_review.add_argument("--review", type=Path, required=True)
     validate_rule_review.set_defaults(handler=run_semgrep_review_validation)
+
+    validate_checkpoint_parser = rule_commands.add_parser(
+        "validate-checkpoint",
+        help="Validate a completed CWE rule-review checkpoint",
+    )
+    validate_checkpoint_parser.add_argument("--cwe", type=int, required=True)
+    validate_checkpoint_parser.add_argument("--dataset", type=Path, required=True)
+    validate_checkpoint_parser.add_argument("--review", type=Path, required=True)
+    validate_checkpoint_parser.add_argument("--fixtures", type=Path, required=True)
+    validate_checkpoint_parser.add_argument(
+        "--compatibility", type=Path, required=True
+    )
+    validate_checkpoint_parser.set_defaults(handler=run_semgrep_checkpoint)
+
+    context = commands.add_parser("context", help="Source-context workflows")
+    context_commands = context.add_subparsers(dest="context_command", required=True)
+    build_context = context_commands.add_parser(
+        "build", help="Build bounded source contexts for normalized findings"
+    )
+    build_context.add_argument("--dataset", type=Path, required=True)
+    build_context.add_argument("--findings", type=Path, required=True)
+    build_context.add_argument("--output", type=Path, required=True)
+    build_context.add_argument("--before", type=int, default=20)
+    build_context.add_argument("--after", type=int, default=20)
+    build_context.add_argument("--max-lines", type=int, default=120)
+    build_context.set_defaults(handler=run_source_context_build)
+    validate_context = context_commands.add_parser(
+        "validate", help="Validate bounded source-context evidence"
+    )
+    validate_context.add_argument("--dataset", type=Path, required=True)
+    validate_context.add_argument("--findings", type=Path, required=True)
+    validate_context.add_argument("--contexts", type=Path, required=True)
+    validate_context.add_argument("--before", type=int, default=20)
+    validate_context.add_argument("--after", type=int, default=20)
+    validate_context.add_argument("--max-lines", type=int, default=120)
+    validate_context.set_defaults(handler=run_source_context_validation)
 
     build_rule_snapshot = rule_commands.add_parser(
         "build-ruleset",
@@ -333,6 +371,61 @@ def run_baseline_validation(args: argparse.Namespace) -> int:
     return print_baseline(result)
 
 
+def run_semgrep_checkpoint(args: argparse.Namespace) -> int:
+    result = validate_checkpoint(
+        cwe=args.cwe,
+        dataset=args.dataset,
+        review=args.review,
+        fixtures=args.fixtures,
+        compatibility=args.compatibility,
+    )
+    return print_semgrep_checkpoint(result)
+
+
+def print_semgrep_checkpoint(result: CheckpointResult) -> int:
+    prefix = f"CWE{result.cwe}"
+    print(f"{prefix}_TOTAL={result.case_count}")
+    print(f"{prefix}_TRUE={result.vulnerable_count}")
+    print(f"{prefix}_FALSE={result.non_vulnerable_count}")
+    print(f"{prefix}_RULES={result.rule_count}")
+    for name, value in sorted(result.metrics.items()):
+        print(f"{name.upper()}={value}")
+    print(f"CHECKPOINT_{prefix}=PASS")
+    return 0
+
+
+def run_source_context_build(args: argparse.Namespace) -> int:
+    result = build_contexts(
+        dataset_dir=args.dataset,
+        findings_path=args.findings,
+        output_path=args.output,
+        before=args.before,
+        after=args.after,
+        max_lines=args.max_lines,
+    )
+    print("CONTEXT_STATUS=completed")
+    print(f"CONTEXTS={result.context_count}")
+    print(f"OUTPUT_SHA256={result.output_sha256}")
+    print(f"OUTPUT={result.output_path}")
+    return 0
+
+
+def run_source_context_validation(args: argparse.Namespace) -> int:
+    result = validate_contexts(
+        dataset_dir=args.dataset,
+        findings_path=args.findings,
+        contexts_path=args.contexts,
+        before=args.before,
+        after=args.after,
+        max_lines=args.max_lines,
+    )
+    print("CONTEXT_STATUS=validated")
+    print(f"CONTEXTS={result.context_count}")
+    print(f"OUTPUT_SHA256={result.output_sha256}")
+    print(f"OUTPUT={result.output_path}")
+    return 0
+
+
 def print_baseline(result: BaselineResult) -> int:
     print(f"BASELINE_STATUS={result.status}")
     print(f"RUN_ID={result.run_id}")
@@ -374,17 +467,25 @@ def main(argv: list[str] | None = None) -> int:
         RulesetError,
         CohortError,
         BaselineError,
+        CheckpointError,
+        ContextError,
     ) as error:
         rule_command = getattr(args, "rule_command", None)
         baseline_command = getattr(args, "baseline_command", None)
         dataset_command = getattr(args, "dataset_command", None)
 
-        if baseline_command:
+        context_command = getattr(args, "context_command", None)
+
+        if context_command:
+            status = "CONTEXT_STATUS=failed"
+        elif baseline_command:
             status = "BASELINE_STATUS=failed"
         elif dataset_command == "build-owasp-cohort":
             status = "COHORT_STATUS=failed"
         elif rule_command == "build-ruleset":
             status = "RULESET_STATUS=failed"
+        elif rule_command == "validate-checkpoint":
+            status = "CHECKPOINT_STATUS=failed"
         elif rule_command in {"init-review", "validate-review"}:
             status = "REVIEW_STATUS=failed"
         elif rule_command == "validate-controls":

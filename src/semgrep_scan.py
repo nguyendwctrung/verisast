@@ -1,7 +1,6 @@
 import hashlib
 import json
 import re
-import sys
 from collections.abc import Callable
 from pathlib import Path
 
@@ -119,10 +118,6 @@ def scan_rules(
 
 
 def _command_prefix(executable: str) -> list[str]:
-    path = Path(executable)
-    if path.suffix.lower() == ".py":
-        resolved = path.resolve()
-        if not resolved.is_file():
-            raise ScanError(f"Semgrep launcher not found: {resolved}")
-        return [sys.executable, str(resolved)]
-    return [executable]
+    if executable != "semgrep":
+        raise ScanError("Semgrep must use the semgrep CLI command")
+    return ["semgrep"]
