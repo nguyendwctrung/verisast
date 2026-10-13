@@ -12,6 +12,7 @@ from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from owasp_cohort import CohortError, build_cohort
 from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
 from semgrep_composite_smoke import CompositeSmokeError
+from semgrep_composite_inputs import CompositeInputError
 from semgrep_compat import CompatError, validate_rules
 from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
@@ -165,6 +166,27 @@ def build_parser() -> argparse.ArgumentParser:
     composite_smoke.add_argument("--expected-version", required=True)
     composite_smoke.set_defaults(
         handler=lambda args: __import__("semgrep_composite_smoke").run_composite_smoke_command(args)
+    )
+
+    freeze_inputs = rule_commands.add_parser(
+        "freeze-composite-inputs",
+        help="Freeze composite development baseline inputs",
+    )
+    freeze_inputs.add_argument("--catalog", type=Path, required=True)
+    freeze_inputs.add_argument("--review", type=Path, required=True)
+    freeze_inputs.add_argument("--ruleset", type=Path, required=True)
+    freeze_inputs.add_argument("--output-dir", type=Path, required=True)
+    freeze_inputs.set_defaults(
+        handler=lambda args: __import__("semgrep_composite_inputs").run_freeze_command(args)
+    )
+
+    validate_inputs = rule_commands.add_parser(
+        "validate-composite-inputs",
+        help="Validate frozen composite development baseline inputs",
+    )
+    validate_inputs.add_argument("--input-dir", type=Path, required=True)
+    validate_inputs.set_defaults(
+        handler=lambda args: __import__("semgrep_composite_inputs").run_validate_command(args)
     )
 
     context = commands.add_parser("context", help="Source-context workflows")
@@ -537,6 +559,7 @@ def main(argv: list[str] | None = None) -> int:
         CheckpointError,
         ContextError,
         CompositeSmokeError,
+        CompositeInputError,
     ) as error:
         rule_command = getattr(args, "rule_command", None)
         baseline_command = getattr(args, "baseline_command", None)
@@ -556,6 +579,8 @@ def main(argv: list[str] | None = None) -> int:
             status = "CHECKPOINT_STATUS=failed"
         elif rule_command == "run-composite-smoke":
             status = "COMPOSITE_SMOKE_STATUS=failed"
+        elif rule_command in {"freeze-composite-inputs", "validate-composite-inputs"}:
+            status = "COMPOSITE_INPUT_STATUS=failed"
         elif rule_command in {"init-review", "validate-review"}:
             status = "REVIEW_STATUS=failed"
         elif rule_command == "validate-controls":
