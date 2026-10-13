@@ -11,6 +11,7 @@ from baseline import (
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from owasp_cohort import CohortError, build_cohort
 from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
+from semgrep_composite_smoke import CompositeSmokeError
 from semgrep_compat import CompatError, validate_rules
 from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
@@ -147,6 +148,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--purpose", choices=("development", "reportable"), required=True
     )
     composite_ruleset.set_defaults(handler=run_composite_ruleset_build)
+
+    composite_smoke = rule_commands.add_parser(
+        "run-composite-smoke",
+        help="Run a bounded composite Semgrep smoke scan",
+    )
+    composite_smoke.add_argument("--run-id", required=True)
+    composite_smoke.add_argument("--upstream-rules", type=Path, required=True)
+    composite_smoke.add_argument("--project-root", type=Path, required=True)
+    composite_smoke.add_argument("--catalog", type=Path, required=True)
+    composite_smoke.add_argument("--review", type=Path, required=True)
+    composite_smoke.add_argument("--ruleset", type=Path, required=True)
+    composite_smoke.add_argument("--source-root", type=Path, required=True)
+    composite_smoke.add_argument("--run-dir", type=Path, required=True)
+    composite_smoke.add_argument("--semgrep", required=True)
+    composite_smoke.add_argument("--expected-version", required=True)
+    composite_smoke.set_defaults(
+        handler=lambda args: __import__("semgrep_composite_smoke").run_composite_smoke_command(args)
+    )
 
     context = commands.add_parser("context", help="Source-context workflows")
     context_commands = context.add_subparsers(dest="context_command", required=True)
@@ -517,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
         BaselineError,
         CheckpointError,
         ContextError,
+        CompositeSmokeError,
     ) as error:
         rule_command = getattr(args, "rule_command", None)
         baseline_command = getattr(args, "baseline_command", None)
@@ -534,6 +554,8 @@ def main(argv: list[str] | None = None) -> int:
             status = "RULESET_STATUS=failed"
         elif rule_command == "validate-checkpoint":
             status = "CHECKPOINT_STATUS=failed"
+        elif rule_command == "run-composite-smoke":
+            status = "COMPOSITE_SMOKE_STATUS=failed"
         elif rule_command in {"init-review", "validate-review"}:
             status = "REVIEW_STATUS=failed"
         elif rule_command == "validate-controls":
