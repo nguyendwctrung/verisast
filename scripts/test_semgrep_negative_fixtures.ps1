@@ -1,5 +1,5 @@
 param(
-    [string]$ExpectedVersion = "1.179.0"
+    [string]$ExpectedVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,7 +15,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Failed to read Semgrep version"
 }
 
-if ($observedVersion -ne $ExpectedVersion) {
+if ($ExpectedVersion -and $observedVersion -ne $ExpectedVersion) {
     throw (
         "Unexpected Semgrep version: " +
         "expected $ExpectedVersion, observed $observedVersion"

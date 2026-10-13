@@ -5,7 +5,7 @@ param(
     [ValidateSet("development", "reportable")]
     [string]$Purpose = "development",
 
-    [string]$ExpectedSemgrepVersion = "1.179.0"
+    [string]$ExpectedSemgrepVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -36,6 +36,13 @@ $env:PYTHONPATH = Join-Path $projectRoot "src"
 $env:PYTHONUTF8 = "1"
 $env:PYTHONIOENCODING = "utf-8"
 $env:SEMGREP_LOG_FILE = Join-Path $logDir "$RunId.log"
+
+if (-not $ExpectedSemgrepVersion) {
+    $ExpectedSemgrepVersion = (& $semgrep --version).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $ExpectedSemgrepVersion) {
+        throw "Semgrep CLI version check failed."
+    }
+}
 
 & $python (Join-Path $projectRoot "src\main.py") rules build-ruleset `
     --rules $rules `

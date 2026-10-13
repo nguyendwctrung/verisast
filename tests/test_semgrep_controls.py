@@ -143,6 +143,28 @@ def test_validate_controls_rejects_fixture_hash_mismatch(tmp_path: Path) -> None
         )
 
 
+def test_validate_controls_does_not_require_manifest_semgrep_version(
+    tmp_path: Path,
+) -> None:
+    project_root, rules_dir, manifest_path = write_inputs(tmp_path)
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    del payload["semgrep_version"]
+    manifest_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    result = validate_controls(
+        project_root=project_root,
+        rules_dir=rules_dir,
+        manifest_path=manifest_path,
+        run_dir=project_root / "artifacts" / "run-no-version",
+        semgrep_executable="semgrep",
+        expected_version=SEMGREP_VERSION,
+        git_reader=lambda _: clean_git_info(),
+        command_runner=runner_with_findings(0),
+    )
+
+    assert result.status == "completed"
+
+
 def test_validate_controls_rejects_existing_run_directory(tmp_path: Path) -> None:
     project_root, rules_dir, manifest_path = write_inputs(tmp_path)
     run_dir = project_root / "artifacts" / "run"

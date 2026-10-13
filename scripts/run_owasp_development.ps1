@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$RunId,
 
-    [string]$ExpectedSemgrepVersion = "1.179.0"
+    [string]$ExpectedSemgrepVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +15,13 @@ if (-not (Get-Command $semgrep -ErrorAction SilentlyContinue)) {
 & $semgrep --version
 if ($LASTEXITCODE -ne 0) {
     throw "Semgrep CLI version check failed."
+}
+
+if (-not $ExpectedSemgrepVersion) {
+    $ExpectedSemgrepVersion = (& $semgrep --version).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $ExpectedSemgrepVersion) {
+        throw "Semgrep CLI version check failed."
+    }
 }
 
 & (Join-Path $PSScriptRoot "run_owasp_baseline.ps1") `

@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
   "control_type": "independent_negative",
-  "semgrep_version": "1.179.0",
   "upstream_commit": "a84ff9cc2453ca91d581380de4b8b3f272f6f4be",
   "controls": [
     {

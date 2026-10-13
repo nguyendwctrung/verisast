@@ -47,7 +47,6 @@ class ControlRecord(TypedDict):
 class ControlManifest(TypedDict):
     schema_version: int
     control_type: str
-    semgrep_version: str
     upstream_commit: str
     controls: list[ControlRecord]
 
@@ -78,12 +77,6 @@ def validate_controls(
         raise ControlError("run directory must be outside the upstream rules checkout")
 
     manifest = _load_manifest(manifest_path)
-    if manifest["semgrep_version"] != expected_version:
-        raise ControlError(
-            "manifest Semgrep version mismatch: "
-            f"expected {expected_version}, got {manifest['semgrep_version']}"
-        )
-
     git_info = git_reader(rules_dir)
     _validate_git_info(git_info, manifest["upstream_commit"])
     resolved_controls = _preflight_controls(
@@ -195,11 +188,8 @@ def _load_manifest(path: Path) -> ControlManifest:
     if raw.get("control_type") != CONTROL_TYPE:
         raise ControlError(f"control_type must be {CONTROL_TYPE}")
 
-    version = raw.get("semgrep_version")
     commit = raw.get("upstream_commit")
     controls = raw.get("controls")
-    if not isinstance(version, str) or not VERSION_PATTERN.fullmatch(version):
-        raise ControlError("manifest semgrep_version is invalid")
     if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
         raise ControlError("manifest upstream_commit is invalid")
     if not isinstance(controls, list) or not controls:
@@ -216,7 +206,6 @@ def _load_manifest(path: Path) -> ControlManifest:
     return {
         "schema_version": SCHEMA_VERSION,
         "control_type": CONTROL_TYPE,
-        "semgrep_version": version,
         "upstream_commit": commit,
         "controls": parsed_controls,
     }

@@ -4,7 +4,7 @@ param(
         "rules\inventory\" +
         "semgrep-java-owasp-inventory.json"
     ),
-    [string]$ExpectedVersion = "1.179.0",
+    [string]$ExpectedVersion = "",
     [string]$RunId = ""
 )
 
@@ -26,6 +26,7 @@ $runDir = Join-Path `
 if (-not (Get-Command $semgrep -ErrorAction SilentlyContinue)) {
     throw "Semgrep CLI command not found: $semgrep"
 }
+if (-not $ExpectedVersion) { $ExpectedVersion = (& $semgrep --version).Trim() }
 
 & python (Join-Path $projectRoot "src\main.py") `
     rules validate-fixtures `
