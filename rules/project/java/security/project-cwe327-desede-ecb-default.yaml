@@ -1,0 +1,20 @@
+rules:
+  - id: project-cwe327-desede-ecb-default
+    languages:
+      - java
+    severity: WARNING
+    message: Default DESede/ECB/PKCS5Padding configuration uses an insecure ECB mode.
+    metadata:
+      category: security
+      cwe:
+        - CWE-327
+      confidence: HIGH
+      technology:
+        - java
+      references:
+        - https://cwe.mitre.org/data/definitions/327.html
+    pattern: |
+      $PROPS.getProperty(
+          "cryptoAlg1",
+          "DESede/ECB/PKCS5Padding"
+      )

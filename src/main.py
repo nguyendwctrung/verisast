@@ -16,7 +16,7 @@ from semgrep_controls import ControlError, validate_controls
 from semgrep_fixtures import FixtureError, validate_fixtures
 from semgrep_review import ReviewError, ReviewResult, init_review, validate_review
 from semgrep_rules import InventoryError, inventory_rules
-from semgrep_ruleset import RulesetError, build_ruleset
+from semgrep_ruleset import RulesetError, build_composite_ruleset, build_ruleset
 from source_context import ContextError, build_contexts, validate_contexts
 
 
@@ -121,6 +121,32 @@ def build_parser() -> argparse.ArgumentParser:
         "--compatibility", type=Path, required=True
     )
     validate_checkpoint_parser.set_defaults(handler=run_semgrep_checkpoint)
+
+    catalog = rule_commands.add_parser(
+        "build-catalog",
+        help="Build an immutable composite catalog of upstream and project rules",
+    )
+    catalog.add_argument("--upstream-inventory", type=Path, required=True)
+    catalog.add_argument("--project-manifest", type=Path, required=True)
+    catalog.add_argument("--project-root", type=Path, required=True)
+    catalog.add_argument("--output", type=Path, required=True)
+    catalog.set_defaults(
+        handler=lambda args: __import__("semgrep_catalog").run_catalog_command(args)
+    )
+
+    composite_ruleset = rule_commands.add_parser(
+        "build-composite-ruleset",
+        help="Build a composite Semgrep ruleset snapshot",
+    )
+    composite_ruleset.add_argument("--upstream-rules", type=Path, required=True)
+    composite_ruleset.add_argument("--project-root", type=Path, required=True)
+    composite_ruleset.add_argument("--catalog", type=Path, required=True)
+    composite_ruleset.add_argument("--review", type=Path, required=True)
+    composite_ruleset.add_argument("--output", type=Path, required=True)
+    composite_ruleset.add_argument(
+        "--purpose", choices=("development", "reportable"), required=True
+    )
+    composite_ruleset.set_defaults(handler=run_composite_ruleset_build)
 
     context = commands.add_parser("context", help="Source-context workflows")
     context_commands = context.add_subparsers(dest="context_command", required=True)
@@ -332,6 +358,24 @@ def run_semgrep_ruleset_build(args: argparse.Namespace) -> int:
     result = build_ruleset(
         rules_dir=args.rules,
         inventory_path=args.inventory,
+        review_path=args.review,
+        output_path=args.output,
+        purpose=args.purpose,
+    )
+    print(f"RULESET_STATUS={result.status}")
+    print(f"RULESET_PURPOSE={result.purpose}")
+    print(f"RULESET_REPORTABLE={str(result.reportable).lower()}")
+    print(f"RULESET_RULES={result.rule_count}")
+    print(f"RULESET_UNRESOLVED={result.unresolved_count}")
+    print(f"RULESET={result.output_path}")
+    return 0
+
+
+def run_composite_ruleset_build(args: argparse.Namespace) -> int:
+    result = build_composite_ruleset(
+        upstream_rules_dir=args.upstream_rules,
+        project_root=args.project_root,
+        catalog_path=args.catalog,
         review_path=args.review,
         output_path=args.output,
         purpose=args.purpose,

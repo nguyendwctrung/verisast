@@ -179,11 +179,14 @@ def test_rejects_unsupported_cwe(tmp_path: Path) -> None:
         validate_checkpoint(cwe=22, **paths)
 
 
-def test_cwe327_profile_keeps_only_padding_oracle_rule() -> None:
+def test_cwe327_profile_requires_dynamic_desede_ecb_rule() -> None:
     included = {
         rule_id
         for rule_id, (decision, _) in EXPECTED_DECISIONS[327].items()
         if decision == "INCLUDE_DEVELOPMENT"
     }
-    assert included == {"cbc-padding-oracle"}
-    assert len(EXPECTED_DECISIONS[327]) == 12
+    assert included == {
+        "cbc-padding-oracle",
+        "project-cwe327-desede-ecb-default",
+    }
+    assert len(EXPECTED_DECISIONS[327]) == 13

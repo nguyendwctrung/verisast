@@ -29,6 +29,7 @@ EXPECTED_DECISIONS = {
         "jjwt-none-alg": ("EXCLUDE", "not_relevant"),
         "md5-used-as-password": ("EXCLUDE", "not_relevant"),
         "no-null-cipher": ("EXCLUDE", "not_relevant"),
+        "project-cwe327-desede-ecb-default": ("INCLUDE_DEVELOPMENT", "relevant"),
         "use-of-aes-ecb": ("EXCLUDE", "not_relevant"),
         "use-of-blowfish": ("EXCLUDE", "not_relevant"),
         "use-of-default-aes": ("EXCLUDE", "not_relevant"),

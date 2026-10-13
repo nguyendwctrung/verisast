@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "source_type": "project_authored",
+  "rules": [
+    {
+      "rule_id": "project-cwe327-desede-ecb-default",
+      "source_path": "rules/project/java/security/project-cwe327-desede-ecb-default.yaml",
+      "source_sha256": "693748ea3923b62fd1895743e6e25bf39d302f3553db9411149a40528616ff69",
+      "languages": ["java"],
+      "mode": "search",
+      "severity": "WARNING",
+      "category": "security",
+      "cwes": [327],
+      "technology": ["java"],
+      "license": "Project-authored",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/327.html"
+      ],
+      "fixtures": [
+        {
+          "kind": "positive",
+          "path": "rules/fixtures/java/project-cwe327-desede-ecb-default.java",
+          "sha256": "b33f944a0519e859719dafa435a58e6360dc7b057e2793bfd4c7a620688c91b0"
+        },
+        {
+          "kind": "negative",
+          "path": "rules/fixtures/java/project-cwe327-desede-ecb-default-negative.java",
+          "sha256": "06d4098fdd202575f32ab2f20158dcba0700fba20a27f132f9522005f7373a31"
+        }
+      ],
+      "rationale": "Detects the project-specific configuration default DESede/ECB/PKCS5Padding passed through Properties.getProperty. This is distinct from the upstream CBC padding-oracle rule and covers the dynamic ECB pattern observed in the frozen OWASP Java source."
+    }
+  ]
+}
