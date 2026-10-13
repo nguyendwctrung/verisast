@@ -87,7 +87,7 @@ def write_inputs(tmp_path: Path) -> dict[str, Path]:
 def test_run_and_validate_baseline(tmp_path: Path) -> None:
     inputs = write_inputs(tmp_path)
 
-    def fake_scan(rules_dir, ruleset, source_root, raw_dir, semgrep, version):
+    def fake_scan(rules_dir, ruleset, source_root, raw_dir, semgrep, version, project_root=None):
         raw_dir.mkdir(parents=True)
         raw = raw_dir / "rule.stdout.json"
         raw.write_text(
@@ -169,7 +169,7 @@ def test_scanner_failure_writes_failed_manifest(tmp_path: Path) -> None:
 def test_context_failure_writes_failed_manifest_without_evaluation(tmp_path: Path) -> None:
     inputs = write_inputs(tmp_path)
 
-    def fake_scan(rules_dir, ruleset, source_root, raw_dir, semgrep, version):
+    def fake_scan(rules_dir, ruleset, source_root, raw_dir, semgrep, version, project_root=None):
         raw_dir.mkdir(parents=True)
         raw = raw_dir / "rule.stdout.json"
         raw.write_text(
@@ -236,3 +236,32 @@ def test_context_failure_writes_failed_manifest_without_evaluation(tmp_path: Pat
     assert manifest["stages"]["context"] == "failed"
     assert manifest["stages"]["evaluate"] == "pending"
     assert not (run_dir / "evaluation" / "metrics.json").exists()
+
+
+def test_baseline_passes_project_root_to_scanner(tmp_path: Path) -> None:
+    inputs = write_inputs(tmp_path)
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+    received: dict[str, Path | None] = {}
+
+    def fail_after_capture(*args, **kwargs):
+        received["project_root"] = kwargs.get("project_root")
+        raise ValueError("stop after capture")
+
+    with pytest.raises(BaselineError, match="stop after capture"):
+        run_owasp_baseline(
+            "run-project-root",
+            "development",
+            inputs["dataset"],
+            inputs["dataset_manifest"],
+            inputs["rules"],
+            inputs["ruleset"],
+            inputs["cohort"],
+            tmp_path / "run-project-root",
+            "semgrep",
+            "1.179.0",
+            fail_after_capture,
+            project_root=project_root,
+        )
+
+    assert received["project_root"] == project_root

@@ -6,6 +6,7 @@ from pathlib import Path
 
 from semgrep_compat import CommandResult, run_command
 from semgrep_rules import sha256_file
+from semgrep_ruleset import RulesetError, resolve_rule_path
 
 VERSION_PATTERN = re.compile(r"\d+\.\d+\.\d+")
 CommandRunner = Callable[[list[str], Path | None], CommandResult]
@@ -24,6 +25,7 @@ def scan_rules(
     expected_version: str,
     command_runner: CommandRunner = run_command,
     verify_hashes: bool = True,
+    project_root: Path | None = None,
 ) -> list[dict[str, object]]:
     rules_dir = rules_dir.resolve()
     source_root = source_root.resolve()
@@ -58,9 +60,10 @@ def scan_rules(
             raise ScanError("ruleset rule must be an object")
         identity = str(rule.get("identity", ""))
         relative_rule = str(rule.get("source_path", ""))
-        rule_path = (rules_dir / relative_rule).resolve()
-        if not rule_path.is_relative_to(rules_dir) or not rule_path.is_file():
-            raise ScanError(f"rule file not found: {relative_rule}")
+        try:
+            rule_path = resolve_rule_path(rule, rules_dir, project_root)
+        except RulesetError as error:
+            raise ScanError(str(error)) from error
         if verify_hashes and sha256_file(rule_path) != rule.get("source_sha256"):
             raise ScanError(f"rule hash mismatch: {relative_rule}")
         key = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]

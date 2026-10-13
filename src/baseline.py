@@ -67,6 +67,7 @@ def run_owasp_baseline(
     expected_version: str,
     scan_runner: ScanRunner = scan_rules,
     context_builder: ContextBuilder = build_contexts,
+    project_root: Path | None = None,
 ) -> BaselineResult:
     if not run_id.strip() or any(character in run_id for character in "\\/:"):
         raise BaselineError("invalid run ID")
@@ -96,7 +97,7 @@ def run_owasp_baseline(
     }
     _write_json(manifest_path, manifest)
     try:
-        ruleset = load_ruleset(ruleset_path, rules_dir)
+        ruleset = load_ruleset(ruleset_path, rules_dir, project_root)
         cohort = load_cohort(cohort_path, dataset_dir, dataset_manifest_path, ruleset_path)
         if ruleset.get("purpose") != purpose or cohort.get("purpose") != purpose:
             raise BaselineError("baseline purpose does not match input snapshots")
@@ -129,6 +130,7 @@ def run_owasp_baseline(
             run_dir / "raw",
             semgrep_executable,
             expected_version,
+            project_root=project_root,
         )
         manifest["stages"]["scan"] = "completed"
         manifest["scans"] = scans
@@ -205,6 +207,7 @@ def validate_baseline_run(
     dataset_dir: Path,
     dataset_manifest_path: Path,
     rules_dir: Path,
+    project_root: Path | None = None,
 ) -> BaselineResult:
     run_dir = run_dir.resolve()
     manifest_path = run_dir / "manifest.json"
@@ -220,7 +223,7 @@ def validate_baseline_run(
             _validate_artifact(run_dir, record)
     ruleset_path = run_dir / str(inputs["ruleset"]["path"])
     cohort_path = run_dir / str(inputs["cohort"]["path"])
-    ruleset = load_ruleset(ruleset_path, rules_dir)
+    ruleset = load_ruleset(ruleset_path, rules_dir, project_root)
     cohort = load_cohort(cohort_path, dataset_dir, dataset_manifest_path, ruleset_path)
     scans = manifest.get("scans")
     if not isinstance(scans, list):

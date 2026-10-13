@@ -10,7 +10,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$python = Join-Path $projectRoot ".venv\Scripts\python.exe"
+$python = "python"
 $semgrep = "semgrep"
 $dataset = Join-Path $projectRoot "datasets\raw\owasp-benchmark-java-v1.2"
 $datasetManifest = Join-Path $projectRoot "datasets\manifests\owasp-benchmark-java-v1.2.json"
@@ -66,6 +66,7 @@ if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     --dataset $dataset `
     --dataset-manifest $datasetManifest `
     --rules $rules `
+    --project-root $projectRoot `
     --ruleset $ruleset `
     --cohort $cohort `
     --run-dir $runDir `

@@ -208,7 +208,11 @@ def build_ruleset(
     )
 
 
-def load_ruleset(path: Path, rules_dir: Path | None = None) -> dict[str, object]:
+def load_ruleset(
+    path: Path,
+    rules_dir: Path | None = None,
+    project_root: Path | None = None,
+) -> dict[str, object]:
     path = path.resolve()
     payload = _read_object(path, "ruleset")
     if payload.get("schema_version") != SCHEMA_VERSION:
@@ -230,10 +234,7 @@ def load_ruleset(path: Path, rules_dir: Path | None = None) -> dict[str, object]
             raise RulesetError("ruleset contains duplicate or invalid identities")
         identities.add(identity)
         if rules_dir is not None:
-            root = rules_dir.resolve()
-            rule_path = (root / str(rule.get("source_path", ""))).resolve()
-            if not rule_path.is_relative_to(root) or not rule_path.is_file():
-                raise RulesetError(f"rule file not found: {rule.get('source_path')}")
+            rule_path = resolve_rule_path(rule, rules_dir, project_root)
             if sha256_file(rule_path) != rule.get("source_sha256"):
                 raise RulesetError(f"rule hash mismatch: {rule.get('source_path')}")
     if purpose == "reportable":
@@ -242,6 +243,29 @@ def load_ruleset(path: Path, rules_dir: Path | None = None) -> dict[str, object]
         if payload.get("unresolved_review_count") != 0:
             raise RulesetError("reportable ruleset contains unresolved reviews")
     return payload
+
+
+def resolve_rule_path(
+    rule: dict[str, object],
+    upstream_rules_dir: Path,
+    project_root: Path | None,
+) -> Path:
+    source_path = rule.get("source_path")
+    if not isinstance(source_path, str) or not source_path:
+        raise RulesetError("rule has an invalid source path")
+    source_root = rule.get("source_root", "upstream_rules")
+    if source_root == "upstream_rules":
+        root = upstream_rules_dir.resolve()
+    elif source_root == "project_root":
+        if project_root is None:
+            raise RulesetError("project root is required for a project-authored rule")
+        root = project_root.resolve()
+    else:
+        raise RulesetError(f"unsupported rule source root: {source_root}")
+    rule_path = (root / source_path).resolve()
+    if not rule_path.is_relative_to(root) or not rule_path.is_file():
+        raise RulesetError(f"rule file not found: {source_path}")
+    return rule_path
 
 
 def _validate_composite_catalog(catalog: dict[str, object]) -> list[dict[str, object]]:

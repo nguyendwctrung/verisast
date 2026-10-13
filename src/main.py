@@ -190,6 +190,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_baseline.add_argument("--dataset", type=Path, required=True)
     run_baseline.add_argument("--dataset-manifest", type=Path, required=True)
     run_baseline.add_argument("--rules", type=Path, required=True)
+    run_baseline.add_argument("--project-root", type=Path)
     run_baseline.add_argument("--ruleset", type=Path, required=True)
     run_baseline.add_argument("--cohort", type=Path, required=True)
     run_baseline.add_argument("--run-dir", type=Path, required=True)
@@ -202,6 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate_baseline.add_argument("--dataset", type=Path, required=True)
     validate_baseline.add_argument("--dataset-manifest", type=Path, required=True)
     validate_baseline.add_argument("--rules", type=Path, required=True)
+    validate_baseline.add_argument("--project-root", type=Path)
     validate_baseline.set_defaults(handler=run_baseline_validation)
 
     return parser
@@ -396,6 +398,7 @@ def run_baseline_owasp(args: argparse.Namespace) -> int:
         dataset_dir=args.dataset,
         dataset_manifest_path=args.dataset_manifest,
         rules_dir=args.rules,
+        project_root=args.project_root,
         ruleset_path=args.ruleset,
         cohort_path=args.cohort,
         run_dir=args.run_dir,
@@ -411,6 +414,7 @@ def run_baseline_validation(args: argparse.Namespace) -> int:
         dataset_dir=args.dataset,
         dataset_manifest_path=args.dataset_manifest,
         rules_dir=args.rules,
+        project_root=args.project_root,
     )
     return print_baseline(result)
 

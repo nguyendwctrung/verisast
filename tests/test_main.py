@@ -603,15 +603,18 @@ def baseline_result() -> BaselineResult:
 
 
 def test_main_runs_and_validates_baseline(monkeypatch, capsys) -> None:
-    monkeypatch.setattr(cli, "run_owasp_baseline", lambda **_: baseline_result())
-    monkeypatch.setattr(cli, "validate_baseline_run", lambda **_: baseline_result())
-    common = ["--dataset", "dataset", "--dataset-manifest", "dataset.json", "--rules", "rules"]
+    calls: list[dict[str, object]] = []
+    monkeypatch.setattr(cli, "run_owasp_baseline", lambda **kwargs: calls.append(kwargs) or baseline_result())
+    monkeypatch.setattr(cli, "validate_baseline_run", lambda **kwargs: calls.append(kwargs) or baseline_result())
+    common = ["--dataset", "dataset", "--dataset-manifest", "dataset.json", "--rules", "rules", "--project-root", "project"]
     assert cli.main(["baseline", "run-owasp", "--run-id", "run-1", "--purpose", "development", *common, "--ruleset", "ruleset.json", "--cohort", "cohort.json", "--run-dir", "run", "--semgrep", "semgrep", "--expected-version", "1.179.0"]) == 0
     assert cli.main(["baseline", "validate-run", "--run-dir", "run", *common]) == 0
     output = capsys.readouterr().out
     assert "BASELINE_STATUS=completed" in output
     assert "REPORTABLE=false" in output
     assert "TP=3" in output
+    assert calls[0]["project_root"] == Path("project")
+    assert calls[1]["project_root"] == Path("project")
 
 
 def test_main_reports_baseline_failure(monkeypatch, capsys) -> None:

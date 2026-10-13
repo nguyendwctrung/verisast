@@ -5,7 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $projectRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
-$python = Join-Path $projectRoot ".venv\Scripts\python.exe"
+$python = "python"
 $dataset = Join-Path $projectRoot "datasets\raw\owasp-benchmark-java-v1.2"
 $datasetManifest = Join-Path $projectRoot "datasets\manifests\owasp-benchmark-java-v1.2.json"
 $rules = Join-Path $projectRoot "rules\upstream\semgrep-rules"
@@ -19,5 +19,6 @@ $env:PYTHONIOENCODING = "utf-8"
     --run-dir $runDir `
     --dataset $dataset `
     --dataset-manifest $datasetManifest `
-    --rules $rules
+    --rules $rules `
+    --project-root $projectRoot
 exit $LASTEXITCODE
