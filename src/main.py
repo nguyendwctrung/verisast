@@ -10,6 +10,7 @@ from baseline import (
 )
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from owasp_cohort import CohortError, build_cohort
+from owasp_split import SplitError, SplitResult, build_split, validate_split
 from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
 from semgrep_composite_smoke import CompositeSmokeError
 from semgrep_composite_inputs import CompositeInputError
@@ -48,6 +49,24 @@ def build_parser() -> argparse.ArgumentParser:
     cohort.add_argument("--output", type=Path, required=True)
     cohort.add_argument("--purpose", choices=("development", "reportable"), required=True)
     cohort.set_defaults(handler=run_owasp_cohort_build)
+
+    split = dataset_commands.add_parser(
+        "build-owasp-split",
+        help="Build immutable OWASP template-family split artifacts",
+    )
+    split.add_argument("--dataset", type=Path, required=True)
+    split.add_argument("--dataset-manifest", type=Path, required=True)
+    split.add_argument("--output-dir", type=Path, required=True)
+    split.set_defaults(handler=run_owasp_split_build)
+
+    validate_split_parser = dataset_commands.add_parser(
+        "validate-owasp-split",
+        help="Validate immutable OWASP template-family split artifacts",
+    )
+    validate_split_parser.add_argument("--dataset", type=Path, required=True)
+    validate_split_parser.add_argument("--dataset-manifest", type=Path, required=True)
+    validate_split_parser.add_argument("--split-dir", type=Path, required=True)
+    validate_split_parser.set_defaults(handler=run_owasp_split_validation)
 
     rules = commands.add_parser("rules", help="Rule workflows")
     rule_commands = rules.add_subparsers(dest="rule_command", required=True)
@@ -264,6 +283,26 @@ def run_owasp_cohort_build(args: argparse.Namespace) -> int:
     print(f"COHORT_UNITS={result.unit_count}")
     print(f"COHORT_CWES={','.join(str(cwe) for cwe in result.cwes)}")
     print(f"COHORT={result.output_path}")
+    return 0
+
+
+def run_owasp_split_build(args: argparse.Namespace) -> int:
+    result = build_split(args.dataset, args.dataset_manifest, args.output_dir)
+    return print_owasp_split(result)
+
+
+def run_owasp_split_validation(args: argparse.Namespace) -> int:
+    result = validate_split(args.dataset, args.dataset_manifest, args.split_dir)
+    return print_owasp_split(result)
+
+
+def print_owasp_split(split_result: SplitResult) -> int:
+    print("SPLIT_STATUS=passed")
+    print(f"SPLIT_DIR={split_result.output_dir}")
+    print(f"SPLIT_UNITS={split_result.unit_count}")
+    print(f"SPLIT_FAMILIES={split_result.family_count}")
+    for name, count in sorted(split_result.split_counts.items()):
+        print(f"SPLIT_{name.upper()}={count}")
     return 0
 
 
@@ -555,6 +594,7 @@ def main(argv: list[str] | None = None) -> int:
         ReviewError,
         RulesetError,
         CohortError,
+        SplitError,
         BaselineError,
         CheckpointError,
         ContextError,
@@ -571,7 +611,7 @@ def main(argv: list[str] | None = None) -> int:
             status = "CONTEXT_STATUS=failed"
         elif baseline_command:
             status = "BASELINE_STATUS=failed"
-        elif dataset_command == "build-owasp-cohort":
+        elif dataset_command in {"build-owasp-cohort", "build-owasp-split", "validate-owasp-split"}:
             status = "COHORT_STATUS=failed"
         elif rule_command == "build-ruleset":
             status = "RULESET_STATUS=failed"
