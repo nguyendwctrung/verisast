@@ -11,6 +11,12 @@ from baseline import (
 from owasp_audit import EXPECTED_CWES, AuditError, audit_dataset
 from owasp_cohort import CohortError, build_cohort
 from owasp_split import SplitError, SplitResult, build_split, validate_split
+from owasp_reportable_inputs import (
+    ReportableInputError,
+    ReportableInputResult,
+    freeze_reportable_inputs,
+    validate_reportable_inputs,
+)
 from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
 from semgrep_composite_smoke import CompositeSmokeError
 from semgrep_composite_inputs import CompositeInputError
@@ -67,6 +73,20 @@ def build_parser() -> argparse.ArgumentParser:
     validate_split_parser.add_argument("--dataset-manifest", type=Path, required=True)
     validate_split_parser.add_argument("--split-dir", type=Path, required=True)
     validate_split_parser.set_defaults(handler=run_owasp_split_validation)
+
+    reportable_inputs = dataset_commands.add_parser(
+        "freeze-owasp-reportable-inputs",
+        help="Freeze reportable OWASP ruleset and split-specific cohorts",
+    )
+    _add_reportable_input_arguments(reportable_inputs, output_name="--output-dir")
+    reportable_inputs.set_defaults(handler=run_reportable_input_freeze)
+
+    validate_reportable_inputs_parser = dataset_commands.add_parser(
+        "validate-owasp-reportable-inputs",
+        help="Validate frozen reportable OWASP ruleset and cohorts",
+    )
+    _add_reportable_input_arguments(validate_reportable_inputs_parser, output_name="--bundle-dir")
+    validate_reportable_inputs_parser.set_defaults(handler=run_reportable_input_validation)
 
     rules = commands.add_parser("rules", help="Rule workflows")
     rule_commands = rules.add_subparsers(dest="rule_command", required=True)
@@ -294,6 +314,55 @@ def run_owasp_split_build(args: argparse.Namespace) -> int:
 def run_owasp_split_validation(args: argparse.Namespace) -> int:
     result = validate_split(args.dataset, args.dataset_manifest, args.split_dir)
     return print_owasp_split(result)
+
+
+def _add_reportable_input_arguments(parser: argparse.ArgumentParser, output_name: str) -> None:
+    parser.add_argument("--dataset", type=Path, required=True)
+    parser.add_argument("--dataset-manifest", type=Path, required=True)
+    parser.add_argument("--split", type=Path, required=True)
+    parser.add_argument("--upstream-rules", type=Path, required=True)
+    parser.add_argument("--project-root", type=Path, required=True)
+    parser.add_argument("--catalog", type=Path, required=True)
+    parser.add_argument("--review", type=Path, required=True)
+    parser.add_argument(output_name, type=Path, required=True)
+
+
+def run_reportable_input_freeze(args: argparse.Namespace) -> int:
+    result = freeze_reportable_inputs(
+        dataset=args.dataset,
+        dataset_manifest=args.dataset_manifest,
+        split=args.split,
+        upstream=args.upstream_rules,
+        project=args.project_root,
+        catalog=args.catalog,
+        review=args.review,
+        output_dir=args.output_dir,
+    )
+    return print_reportable_inputs(result)
+
+
+def run_reportable_input_validation(args: argparse.Namespace) -> int:
+    result = validate_reportable_inputs(
+        dataset=args.dataset,
+        dataset_manifest=args.dataset_manifest,
+        split=args.split,
+        upstream=args.upstream_rules,
+        project=args.project_root,
+        catalog=args.catalog,
+        review=args.review,
+        bundle_dir=args.bundle_dir,
+    )
+    return print_reportable_inputs(result)
+
+
+def print_reportable_inputs(result: ReportableInputResult) -> int:
+    print("REPORTABLE_INPUT_STATUS=passed")
+    print(f"REPORTABLE_INPUT_DIR={result.output_dir}")
+    print(f"REPORTABLE_INPUT_RULES={result.rule_count}")
+    print(f"REPORTABLE_INPUT_UNITS={result.unit_count}")
+    for name, count in sorted(result.cohort_counts.items()):
+        print(f"REPORTABLE_INPUT_{name.upper()}={count}")
+    return 0
 
 
 def print_owasp_split(split_result: SplitResult) -> int:
@@ -595,6 +664,7 @@ def main(argv: list[str] | None = None) -> int:
         RulesetError,
         CohortError,
         SplitError,
+        ReportableInputError,
         BaselineError,
         CheckpointError,
         ContextError,
@@ -611,7 +681,7 @@ def main(argv: list[str] | None = None) -> int:
             status = "CONTEXT_STATUS=failed"
         elif baseline_command:
             status = "BASELINE_STATUS=failed"
-        elif dataset_command in {"build-owasp-cohort", "build-owasp-split", "validate-owasp-split"}:
+        elif dataset_command in {"build-owasp-cohort", "build-owasp-split", "validate-owasp-split", "freeze-owasp-reportable-inputs", "validate-owasp-reportable-inputs"}:
             status = "COHORT_STATUS=failed"
         elif rule_command == "build-ruleset":
             status = "RULESET_STATUS=failed"
