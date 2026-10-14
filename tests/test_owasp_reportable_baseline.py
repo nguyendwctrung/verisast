@@ -32,3 +32,10 @@ def test_evaluate_cohorts_uses_one_finding_set_for_each_split(tmp_path: Path) ->
 def test_cohort_directory_is_resolved_from_manifest_string_path(tmp_path: Path) -> None:
     inputs = {"cohorts": {"development": {"path": "inputs/cohorts/development.json"}}}
     assert _cohort_dir_from_inputs(tmp_path, inputs) == tmp_path / "inputs" / "cohorts"
+
+
+def test_reportable_baseline_source_records_runtime_measurement_artifact() -> None:
+    source = (Path(__file__).resolve().parents[1] / "src" / "owasp_reportable_baseline.py").read_text(encoding="utf-8")
+    assert '"runtime"' in source
+    assert "finish_measurement" in source
+    assert "validate_measurement" in source

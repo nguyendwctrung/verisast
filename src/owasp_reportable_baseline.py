@@ -11,6 +11,7 @@ from semgrep_rules import sha256_file
 from semgrep_ruleset import load_ruleset
 from semgrep_scan import scan_rules
 from source_context import build_contexts, validate_contexts
+from runtime_evidence import finish_measurement, start_measurement, validate_measurement
 
 
 SPLITS = ("development", "validation", "test")
@@ -51,6 +52,7 @@ def run_reportable_baseline(*, run_id: str, dataset: Path, dataset_manifest: Pat
         raise ReportableBaselineError(f"run directory already exists: {run_dir}")
     dataset, dataset_manifest, bundle_dir, rules_dir, project_root = (dataset.resolve(), dataset_manifest.resolve(), bundle_dir.resolve(), rules_dir.resolve(), project_root.resolve())
     _validate_bundle(bundle_dir, rules_dir, project_root)
+    measurement_start = start_measurement()
     run_dir.mkdir(parents=True)
     manifest_path = run_dir / "manifest.json"
     manifest: dict[str, Any] = {"schema_version": 1, "status": "running", "run_id": run_id, "purpose": "reportable", "reportable": False, "created_at": datetime.now(timezone.utc).isoformat(), "stages": {"inputs": "pending", "scan": "pending", "normalize": "pending", "context": "pending", "evaluate": "pending"}}
@@ -98,6 +100,11 @@ def run_reportable_baseline(*, run_id: str, dataset: Path, dataset_manifest: Pat
             evaluation_records[split] = {"matches": _artifact(run_dir, matches_path), "metrics": _artifact(run_dir, metrics_path)}
         manifest["evaluation"] = evaluation_records
         manifest["counts"] = {"rules": len(ruleset["rules"]), "raw_findings": raw_count, "normalized_findings": len(findings), "contexts": context_result.context_count}
+        runtime_path = run_dir / "runtime" / "measurement.json"
+        runtime = finish_measurement(measurement_start, scans)
+        validate_measurement(runtime, scans)
+        _write_json(runtime_path, runtime)
+        manifest["runtime"] = _artifact(run_dir, runtime_path)
         manifest["semgrep_version"] = expected_version
         manifest["stages"]["evaluate"] = "completed"
         manifest["reportable"] = True
@@ -145,6 +152,10 @@ def validate_reportable_baseline(*, run_dir: Path, dataset: Path, dataset_manife
             path = Path(str(scan.get(f"{prefix}_path", ""))).resolve()
             if not path.is_relative_to(run_dir) or sha256_file(path) != scan.get(f"{prefix}_sha256"):
                 raise ReportableBaselineError(f"scan {prefix} artifact mismatch")
+    runtime_record = manifest.get("runtime")
+    _validate_artifact(run_dir, runtime_record)
+    runtime_path = run_dir / str(runtime_record["path"])
+    validate_measurement(_read_object(runtime_path, "runtime measurement"), scans)
     dataset_info = _read_object(dataset_manifest, "dataset manifest")
     findings, raw_count = normalize_findings(dataset, str(dataset_info["frozen_commit"]), scans)
     normalized = manifest.get("normalized")
