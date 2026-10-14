@@ -17,6 +17,12 @@ from owasp_reportable_inputs import (
     freeze_reportable_inputs,
     validate_reportable_inputs,
 )
+from owasp_reportable_baseline import (
+    ReportableBaselineError,
+    ReportableBaselineResult,
+    run_reportable_baseline,
+    validate_reportable_baseline,
+)
 from semgrep_checkpoint import CheckpointError, CheckpointResult, validate_checkpoint
 from semgrep_composite_smoke import CompositeSmokeError
 from semgrep_composite_inputs import CompositeInputError
@@ -285,6 +291,21 @@ def build_parser() -> argparse.ArgumentParser:
     validate_baseline.add_argument("--rules", type=Path, required=True)
     validate_baseline.add_argument("--project-root", type=Path)
     validate_baseline.set_defaults(handler=run_baseline_validation)
+
+    reportable_baseline = baseline_commands.add_parser(
+        "run-owasp-reportable", help="Run one-scan OWASP reportable Semgrep baseline"
+    )
+    _add_reportable_baseline_arguments(reportable_baseline, output_name="--run-dir")
+    reportable_baseline.add_argument("--run-id", required=True)
+    reportable_baseline.add_argument("--semgrep", required=True)
+    reportable_baseline.add_argument("--expected-version", required=True)
+    reportable_baseline.set_defaults(handler=run_owasp_reportable_baseline)
+
+    validate_reportable_baseline_parser = baseline_commands.add_parser(
+        "validate-owasp-reportable", help="Validate one-scan OWASP reportable baseline"
+    )
+    _add_reportable_baseline_arguments(validate_reportable_baseline_parser, output_name="--run-dir")
+    validate_reportable_baseline_parser.set_defaults(handler=run_owasp_reportable_baseline_validation)
 
     return parser
 
@@ -568,6 +589,47 @@ def run_baseline_validation(args: argparse.Namespace) -> int:
     return print_baseline(result)
 
 
+def _add_reportable_baseline_arguments(parser: argparse.ArgumentParser, output_name: str) -> None:
+    parser.add_argument("--dataset", type=Path, required=True)
+    parser.add_argument("--dataset-manifest", type=Path, required=True)
+    parser.add_argument("--bundle-dir", type=Path, required=True)
+    parser.add_argument("--rules", type=Path, required=True)
+    parser.add_argument("--project-root", type=Path, required=True)
+    parser.add_argument(output_name, type=Path, required=True)
+
+
+def run_owasp_reportable_baseline(args: argparse.Namespace) -> int:
+    result = run_reportable_baseline(
+        run_id=args.run_id, dataset=args.dataset, dataset_manifest=args.dataset_manifest,
+        bundle_dir=args.bundle_dir, rules_dir=args.rules, project_root=args.project_root,
+        run_dir=args.run_dir, semgrep=args.semgrep, expected_version=args.expected_version,
+    )
+    return print_reportable_baseline(result)
+
+
+def run_owasp_reportable_baseline_validation(args: argparse.Namespace) -> int:
+    result = validate_reportable_baseline(
+        run_dir=args.run_dir, dataset=args.dataset, dataset_manifest=args.dataset_manifest,
+        bundle_dir=args.bundle_dir, rules_dir=args.rules, project_root=args.project_root,
+    )
+    return print_reportable_baseline(result)
+
+
+def print_reportable_baseline(result: ReportableBaselineResult) -> int:
+    print("REPORTABLE_BASELINE_STATUS=passed")
+    print(f"RUN_ID={result.run_id}")
+    print(f"RUN_DIR={result.run_dir}")
+    print(f"RAW_FINDINGS={result.raw_finding_count}")
+    print(f"NORMALIZED_FINDINGS={result.normalized_finding_count}")
+    for split, metrics in sorted(result.split_metrics.items()):
+        overall = metrics["overall"]
+        print(f"{split.upper()}_TP={overall['tp']}")
+        print(f"{split.upper()}_FP={overall['fp']}")
+        print(f"{split.upper()}_TN={overall['tn']}")
+        print(f"{split.upper()}_FN={overall['fn']}")
+    return 0
+
+
 def run_semgrep_checkpoint(args: argparse.Namespace) -> int:
     result = validate_checkpoint(
         cwe=args.cwe,
@@ -665,6 +727,7 @@ def main(argv: list[str] | None = None) -> int:
         CohortError,
         SplitError,
         ReportableInputError,
+        ReportableBaselineError,
         BaselineError,
         CheckpointError,
         ContextError,
