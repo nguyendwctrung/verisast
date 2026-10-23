@@ -14,17 +14,20 @@ from units import load as load_units, write as write_units
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="verisast")
     commands = parser.add_subparsers(dest="command", required=True)
+
     scan = commands.add_parser("scan")
     scan.add_argument("--source", type=Path, required=True)
     scan.add_argument("--run", type=Path, required=True)
     scan.add_argument("--codeql", default="codeql")
     scan.add_argument("--suite", required=True)
+
     normalize_parser = commands.add_parser("normalize")
     normalize_parser.add_argument("--sarif", type=Path, required=True)
     normalize_parser.add_argument("--source-revision", required=True)
     normalize_parser.add_argument("--pack", required=True)
     normalize_parser.add_argument("--suite", required=True)
     normalize_parser.add_argument("--output", type=Path, required=True)
+
     context = commands.add_parser("context")
     context.add_argument("--source", type=Path, required=True)
     context.add_argument("--findings", type=Path, required=True)
@@ -32,19 +35,23 @@ def main(argv: list[str] | None = None) -> int:
     context.add_argument("--before", type=int, default=20)
     context.add_argument("--after", type=int, default=20)
     context.add_argument("--limit", type=int, default=150)
+
     evaluate = commands.add_parser("evaluate")
     evaluate.add_argument("--units", type=Path, required=True)
     evaluate.add_argument("--findings", type=Path, required=True)
     evaluate.add_argument("--output", type=Path, required=True)
+
     units = commands.add_parser("units")
     units.add_argument("--labels", type=Path, required=True)
     units.add_argument("--output", type=Path, required=True)
+
     triage = commands.add_parser("triage")
     triage.add_argument("--findings", type=Path, required=True)
     triage.add_argument("--contexts", type=Path, required=True)
     triage.add_argument("--prompt", type=Path, required=True)
     triage.add_argument("--config", type=Path, required=True)
     triage.add_argument("--run", type=Path, required=True)
+    
     args = parser.parse_args(argv)
     try:
         if args.command == "scan":

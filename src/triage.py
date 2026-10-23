@@ -39,15 +39,17 @@ def _progress_event(event: str, started_at: str, elapsed_seconds: float, candida
     return progress
 
 
-def _progress_line(progress: dict[str, object]) -> str:
+def _progress_block(progress: dict[str, object]) -> str:
     eta = progress["eta_seconds"]
     eta_text = "unknown" if eta is None else f"{eta}s"
-    return (
-        f"TRIAGE_PROGRESS {progress['candidate_index']}/{progress['candidate_count']} "
-        f"({progress['completion_percent']}%) elapsed={progress['elapsed_seconds']}s "
-        f"eta={eta_text} candidate={progress.get('candidate_id')} "
-        f"verdict={progress.get('effective_verdict')}"
-    )
+    return "\n".join([
+        "====================",
+        f"{progress['candidate_index']}/{progress['candidate_count']}",
+        f"elapsed={progress['elapsed_seconds']}s",
+        f"eta={eta_text}",
+        f"candidate={progress.get('candidate_id')}",
+        f"verdict={progress.get('effective_verdict')}",
+    ])
 
 
 def _input_hashes(findings: Path, contexts: Path, prompt: Path, schema: Path, config: Path) -> dict[str, dict[str, str]]:
@@ -237,7 +239,7 @@ def run(findings_path: Path, contexts_path: Path, prompt_path: Path, config_path
             progress.update({"run_id": output.name, "variant": config["variant"]})
             progress_file.write(json.dumps(progress, sort_keys=True) + "\n")
             progress_file.flush()
-            print(_progress_line(progress))
+            print(_progress_block(progress))
         complete_event = _progress_event(
             "run_completed", started_at, time.monotonic() - started,
             candidate_count, candidate_count,

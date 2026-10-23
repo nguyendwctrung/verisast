@@ -7,7 +7,7 @@ from main import main
 from ollama_client import generate, metadata, running_model
 from sarif import normalize
 from scan import _raw_result_count
-from triage import _guard_contract, _guard_packet, _input_hashes, _progress_event, _request, _schema_for
+from triage import _guard_contract, _guard_packet, _input_hashes, _progress_block, _progress_event, _request, _schema_for
 from verdict import check
 
 
@@ -51,6 +51,27 @@ def test_progress_event_has_position_percent_elapsed_and_eta() -> None:
         "effective_verdict": "UNCERTAIN",
         "error": None,
     }
+
+
+def test_progress_block_is_multiline_without_percentage() -> None:
+    block = _progress_block({
+        "candidate_index": 2,
+        "candidate_count": 13,
+        "elapsed_seconds": 35.718,
+        "eta_seconds": 196.449,
+        "candidate_id": "candidate-2",
+        "effective_verdict": "UNCERTAIN",
+        "completion_percent": 15.38,
+    })
+
+    assert block == (
+        "====================\n"
+        "2/13\n"
+        "elapsed=35.718s\n"
+        "eta=196.449s\n"
+        "candidate=candidate-2\n"
+        "verdict=UNCERTAIN"
+    )
 
 
 def test_context_and_evaluation_use_frozen_candidates(tmp_path: Path) -> None:
