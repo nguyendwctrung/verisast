@@ -2,7 +2,8 @@ import copy
 import hashlib
 import json
 import re
-from datetime import datetime, timezone
+import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from context import read as read_contexts
@@ -13,6 +14,40 @@ from verdict import check
 
 class TriageError(RuntimeError):
     pass
+
+
+def _progress_event(event: str, started_at: str, elapsed_seconds: float, candidate_index: int, candidate_count: int, candidate_id: str | None = None, row: dict[str, object] | None = None, candidate_elapsed_seconds: float | None = None) -> dict[str, object]:
+    elapsed_seconds = round(elapsed_seconds, 3)
+    progress = {
+        "schema_version": 1,
+        "event": event,
+        "timestamp": (datetime.fromisoformat(started_at) + timedelta(seconds=elapsed_seconds)).isoformat(),
+        "started_at": started_at,
+        "elapsed_seconds": elapsed_seconds,
+        "candidate_index": candidate_index,
+        "candidate_count": candidate_count,
+        "completion_percent": round(100 * candidate_index / candidate_count, 2) if candidate_count else (0.0 if event == "run_started" else 100.0),
+        "eta_seconds": round(elapsed_seconds * (candidate_count - candidate_index) / candidate_index, 3) if candidate_index else None,
+    }
+    if candidate_id is not None:
+        progress["candidate_id"] = candidate_id
+    if candidate_elapsed_seconds is not None:
+        progress["candidate_elapsed_seconds"] = round(candidate_elapsed_seconds, 3)
+    if row is not None:
+        progress["effective_verdict"] = row.get("effective_verdict")
+        progress["error"] = row.get("error")
+    return progress
+
+
+def _progress_line(progress: dict[str, object]) -> str:
+    eta = progress["eta_seconds"]
+    eta_text = "unknown" if eta is None else f"{eta}s"
+    return (
+        f"TRIAGE_PROGRESS {progress['candidate_index']}/{progress['candidate_count']} "
+        f"({progress['completion_percent']}%) elapsed={progress['elapsed_seconds']}s "
+        f"eta={eta_text} candidate={progress.get('candidate_id')} "
+        f"verdict={progress.get('effective_verdict')}"
+    )
 
 
 def _input_hashes(findings: Path, contexts: Path, prompt: Path, schema: Path, config: Path) -> dict[str, dict[str, str]]:
@@ -154,41 +189,68 @@ def run(findings_path: Path, contexts_path: Path, prompt_path: Path, config_path
     raw_dir.mkdir()
     requests_dir = output / "requests"
     requests_dir.mkdir()
+    progress_path = output / "progress.jsonl"
     rows = []
-    for finding in findings:
-        candidate_id = str(finding["id"])
-        context = contexts.get(candidate_id)
-        if context is None:
-            rows.append({"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": "missing_context"})
-            continue
-        guards = {str(guard["id"]): guard for guard in context.get("guards", []) if isinstance(guard, dict) and isinstance(guard.get("id"), str)}
-        guard_packet = _guard_packet(context, guards)
-        prompt = template.replace("{guard_packet}", json.dumps(guard_packet, sort_keys=True)).replace("{finding}", json.dumps(finding, sort_keys=True)).replace("{context}", json.dumps(context, sort_keys=True)).replace("{required_guard_ids}", json.dumps(sorted(guards))).replace("{retrieved_knowledge}", "[]")
-        candidate_schema = _schema_for(schema, guards)
-        request = _request(prompt, candidate_schema, guards, guard_packet, [], inference_options)
-        (requests_dir / f"{candidate_id}.json").write_text(json.dumps(request, indent=2), encoding="utf-8")
-        try:
-            decoded, raw = generate(
-                str(config["endpoint"]), str(config["model"]), prompt,
-                int(config["timeout_seconds"]), int(inference_options["num_predict"]),
-                candidate_schema, float(inference_options["temperature"]),
-                int(inference_options["num_ctx"]), str(inference_options["keep_alive"]),
-            )
-            (raw_dir / f"{candidate_id}.json").write_text(raw, encoding="utf-8")
-            lines = {str(line["id"]) for line in context["lines"] if isinstance(line, dict) and isinstance(line.get("id"), str)}
-            verdict = check(str(decoded["response"]), lines, set(), guards)
-            row = {"candidate_id": candidate_id, "effective_verdict": verdict.effective, "reported_verdict": verdict.reported, "error": verdict.error}
-            if verdict.payload is not None and isinstance(verdict.payload.get("context_bound_evidence"), list):
-                row["context_bound_evidence"] = verdict.payload["context_bound_evidence"]
+    started_at = datetime.now(timezone.utc).isoformat()
+    started = time.monotonic()
+    candidate_count = len(findings)
+    print(f"CODEQL_FINDINGS candidates={candidate_count}")
+    with progress_path.open("w", encoding="utf-8") as progress_file:
+        start_event = _progress_event("run_started", started_at, 0, 0, candidate_count)
+        start_event.update({"run_id": output.name, "variant": config["variant"]})
+        progress_file.write(json.dumps(start_event, sort_keys=True) + "\n")
+        progress_file.flush()
+        for candidate_index, finding in enumerate(findings, start=1):
+            candidate_started = time.monotonic()
+            candidate_id = str(finding["id"])
+            context = contexts.get(candidate_id)
+            if context is None:
+                row = {"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": "missing_context"}
+            else:
+                guards = {str(guard["id"]): guard for guard in context.get("guards", []) if isinstance(guard, dict) and isinstance(guard.get("id"), str)}
+                guard_packet = _guard_packet(context, guards)
+                prompt = template.replace("{guard_packet}", json.dumps(guard_packet, sort_keys=True)).replace("{finding}", json.dumps(finding, sort_keys=True)).replace("{context}", json.dumps(context, sort_keys=True)).replace("{required_guard_ids}", json.dumps(sorted(guards))).replace("{retrieved_knowledge}", "[]")
+                candidate_schema = _schema_for(schema, guards)
+                request = _request(prompt, candidate_schema, guards, guard_packet, [], inference_options)
+                (requests_dir / f"{candidate_id}.json").write_text(json.dumps(request, indent=2), encoding="utf-8")
+                try:
+                    decoded, raw = generate(
+                        str(config["endpoint"]), str(config["model"]), prompt,
+                        int(config["timeout_seconds"]), int(inference_options["num_predict"]),
+                        candidate_schema, float(inference_options["temperature"]),
+                        int(inference_options["num_ctx"]), str(inference_options["keep_alive"]),
+                    )
+                    (raw_dir / f"{candidate_id}.json").write_text(raw, encoding="utf-8")
+                    lines = {str(line["id"]) for line in context["lines"] if isinstance(line, dict) and isinstance(line.get("id"), str)}
+                    verdict = check(str(decoded["response"]), lines, set(), guards)
+                    row = {"candidate_id": candidate_id, "effective_verdict": verdict.effective, "reported_verdict": verdict.reported, "error": verdict.error}
+                    if verdict.payload is not None and isinstance(verdict.payload.get("context_bound_evidence"), list):
+                        row["context_bound_evidence"] = verdict.payload["context_bound_evidence"]
+                except OllamaError as error:
+                    row = {"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": f"transport:{error}"}
             rows.append(row)
-        except OllamaError as error:
-            rows.append({"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": f"transport:{error}"})
+            progress = _progress_event(
+                "candidate_completed", started_at, time.monotonic() - started,
+                candidate_index, candidate_count, candidate_id, row,
+                time.monotonic() - candidate_started,
+            )
+            progress.update({"run_id": output.name, "variant": config["variant"]})
+            progress_file.write(json.dumps(progress, sort_keys=True) + "\n")
+            progress_file.flush()
+            print(_progress_line(progress))
+        complete_event = _progress_event(
+            "run_completed", started_at, time.monotonic() - started,
+            candidate_count, candidate_count,
+        )
+        complete_event.update({"run_id": output.name, "variant": config["variant"]})
+        progress_file.write(json.dumps(complete_event, sort_keys=True) + "\n")
+        progress_file.flush()
     (output / "verdicts.jsonl").write_text("".join(json.dumps(row, sort_keys=True) + "\n" for row in rows), encoding="utf-8")
     try:
         model["runtime"] = running_model(str(config["endpoint"]), str(config["model"]), int(config["timeout_seconds"]))
     except OllamaError as error:
         model["runtime_error"] = str(error)
-    manifest = {"schema_version": 1, "status": "completed", "created_at": datetime.now(timezone.utc).isoformat(), "variant": config["variant"], "config": config, "inference_options": inference_options, "model": model, "inputs": _input_hashes(findings_path, contexts_path, prompt_path, schema_path, config_path), "candidate_count": len(findings), "verdict_counts": {name: sum(row["effective_verdict"] == name for row in rows) for name in ("TRUE_POSITIVE", "FALSE_POSITIVE", "UNCERTAIN")}}
+    manifest = {"schema_version": 1, "status": "completed", "created_at": datetime.now(timezone.utc).isoformat(), "variant": config["variant"], "config": config, "inference_options": inference_options, "model": model, "inputs": _input_hashes(findings_path, contexts_path, prompt_path, schema_path, config_path), "candidate_count": candidate_count, "progress": {"path": "progress.jsonl", "schema_version": 1, "event_count": candidate_count + 2}, "verdict_counts": {name: sum(row["effective_verdict"] == name for row in rows) for name in ("TRUE_POSITIVE", "FALSE_POSITIVE", "UNCERTAIN")}}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest
 

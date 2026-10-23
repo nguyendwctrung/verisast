@@ -6,7 +6,8 @@ from evaluate import score
 from main import main
 from ollama_client import generate, metadata, running_model
 from sarif import normalize
-from triage import _guard_contract, _guard_packet, _input_hashes, _request, _schema_for
+from scan import _raw_result_count
+from triage import _guard_contract, _guard_packet, _input_hashes, _progress_event, _request, _schema_for
 from verdict import check
 
 
@@ -16,6 +17,40 @@ def test_normalize_keeps_code_flow_and_cwe(tmp_path: Path) -> None:
     findings = normalize(sarif_path, "abc", "pack", "suite")
     assert findings[0]["cwes"] == [89]
     assert findings[0]["flow"][0]["line"] == 4
+
+
+def test_raw_result_count_preserves_all_codeql_sarif_results(tmp_path: Path) -> None:
+    sarif_path = tmp_path / "results.sarif"
+    sarif_path.write_text(json.dumps({
+        "version": "2.1.0",
+        "runs": [{"results": [{"ruleId": "java/sql"}, {"ruleId": "java/xss"}]}, {"results": [{"ruleId": "java/path"}]}],
+    }), encoding="utf-8")
+
+    assert _raw_result_count(sarif_path) == 3
+
+
+def test_progress_event_has_position_percent_elapsed_and_eta() -> None:
+    started_at = "2026-10-23T06:00:00+00:00"
+    event = _progress_event(
+        "candidate_completed", started_at, 12.0, 2, 5, "candidate-2",
+        {"effective_verdict": "UNCERTAIN", "error": None}, 4.5,
+    )
+
+    assert event == {
+        "schema_version": 1,
+        "event": "candidate_completed",
+        "timestamp": "2026-10-23T06:00:12+00:00",
+        "started_at": started_at,
+        "elapsed_seconds": 12.0,
+        "candidate_index": 2,
+        "candidate_count": 5,
+        "completion_percent": 40.0,
+        "eta_seconds": 18.0,
+        "candidate_id": "candidate-2",
+        "candidate_elapsed_seconds": 4.5,
+        "effective_verdict": "UNCERTAIN",
+        "error": None,
+    }
 
 
 def test_context_and_evaluation_use_frozen_candidates(tmp_path: Path) -> None:
