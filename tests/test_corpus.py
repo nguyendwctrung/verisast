@@ -9,15 +9,21 @@ from main import main
 
 
 def source_record(path: Path, source_id: str = "cwe") -> dict[str, object]:
+    license_snapshot = path.parent / f"{source_id}-license.txt"
+    license_snapshot.write_text("Creative Commons Attribution 4.0 International\n", encoding="utf-8")
     return {
         "source_id": source_id,
         "path": str(path),
         "publisher": "Example Publisher",
         "source_url": "https://example.invalid/source",
+        "source_locator": "section:mitigations",
         "source_revision_or_release": "2026.1",
+        "retrieved_at_utc": "2026-10-27T00:00:00Z",
+        "expected_raw_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "license_id": "CC-BY-4.0",
         "license_url": "https://creativecommons.org/licenses/by/4.0/",
         "copyright_notice": "Example Publisher",
+        "license_snapshot_reference": license_snapshot.name,
         "selection_reason": "registered CWE scope",
         "document_id": "cwe:CWE-22",
         "title": "Path Traversal",
@@ -60,6 +66,9 @@ def test_ingest_creates_stable_documents_chunks_and_manifest(tmp_path: Path) -> 
     assert document_a["text"] == "Validate a canonical path.\n\nReject paths outside the base."
     assert source_a["raw_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
     assert (output_a / source_a["raw_path"]).read_bytes() == source.read_bytes()
+    assert document_a["source_locator"] == "section:mitigations"
+    assert source_a["expected_raw_sha256"] == source_a["raw_sha256"]
+    assert (output_a / source_a["license_snapshot_reference"]).read_text(encoding="utf-8") == "Creative Commons Attribution 4.0 International\n"
 
 
 def test_changed_content_changes_version_and_chunk_identity(tmp_path: Path) -> None:
@@ -69,6 +78,7 @@ def test_changed_content_changes_version_and_chunk_identity(tmp_path: Path) -> N
     write_manifest(manifest, [source_record(source)])
     ingest(manifest, tmp_path / "corpus-a", {"target_identifiers": []})
     source.write_text("Validate and reject the canonical path.", encoding="utf-8")
+    write_manifest(manifest, [source_record(source)])
     ingest(manifest, tmp_path / "corpus-b", {"target_identifiers": []})
 
     first_document = read_jsonl(tmp_path / "corpus-a" / "documents.jsonl")[0]
@@ -128,6 +138,72 @@ def test_general_guidance_is_admitted_without_target_overlap(tmp_path: Path) -> 
 
     assert result["status"] == "passed"
     assert len(read_jsonl(tmp_path / "corpus" / "documents.jsonl")) == 1
+
+
+@pytest.mark.parametrize("field", [
+    "retrieved_at_utc",
+    "expected_raw_sha256",
+    "source_locator",
+    "license_snapshot_reference",
+])
+def test_missing_freeze_readiness_metadata_is_quarantined(tmp_path: Path, field: str) -> None:
+    source = tmp_path / "guidance.txt"
+    source.write_text("Use a canonical path.", encoding="utf-8")
+    record = source_record(source)
+    record.pop(field)
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    quarantine = read_jsonl(tmp_path / "corpus" / "quarantined.jsonl")
+    assert result["status"] == "failed"
+    assert quarantine[0]["reason"] == "missing_required_metadata"
+    assert field in quarantine[0]["missing_fields"]
+
+
+@pytest.mark.parametrize(("field", "value"), [
+    ("retrieved_at_utc", "2026-10-27T00:00:00+07:00"),
+    ("expected_raw_sha256", "not-a-sha256"),
+    ("source_locator", ["Mitigations"]),
+    ("license_snapshot_reference", "missing-license.txt"),
+])
+def test_invalid_freeze_readiness_metadata_is_quarantined(
+    tmp_path: Path,
+    field: str,
+    value: object,
+) -> None:
+    source = tmp_path / "guidance.txt"
+    source.write_text("Use a canonical path.", encoding="utf-8")
+    record = source_record(source)
+    record[field] = value
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    quarantine = read_jsonl(tmp_path / "corpus" / "quarantined.jsonl")
+    assert result["status"] == "failed"
+    assert quarantine[0]["reason"] == "invalid_required_metadata"
+    assert field in quarantine[0]["invalid_fields"]
+
+
+def test_raw_hash_mismatch_is_quarantined(tmp_path: Path) -> None:
+    source = tmp_path / "guidance.txt"
+    source.write_text("Use a canonical path.", encoding="utf-8")
+    record = source_record(source)
+    record["expected_raw_sha256"] = "0" * 64
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    quarantine = read_jsonl(tmp_path / "corpus" / "quarantined.jsonl")
+    assert result["status"] == "failed"
+    assert quarantine[0]["reason"] == "raw_hash_mismatch"
+    assert quarantine[0]["expected_raw_sha256"] == "0" * 64
+    assert quarantine[0]["actual_raw_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
+    assert not (tmp_path / "corpus" / "documents.jsonl").read_text(encoding="utf-8")
 
 
 def test_ingest_refuses_existing_output_directory(tmp_path: Path) -> None:

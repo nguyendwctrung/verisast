@@ -2,6 +2,7 @@ import hashlib
 import json
 import re
 import shutil
+from datetime import datetime
 from pathlib import Path
 
 
@@ -11,8 +12,10 @@ class CorpusError(ValueError):
 
 REQUIRED_SOURCE_FIELDS = (
     "source_id", "path", "publisher", "source_url", "source_revision_or_release",
-    "license_id", "license_url", "copyright_notice", "selection_reason",
-    "document_id", "title", "section_path", "cwe_ids", "programming_languages",
+    "retrieved_at_utc", "expected_raw_sha256", "source_locator", "license_id",
+    "license_url", "copyright_notice", "license_snapshot_reference",
+    "selection_reason", "document_id", "title", "section_path", "cwe_ids",
+    "programming_languages",
 )
 
 DEFAULT_PROHIBITED_MARKERS = (
@@ -30,7 +33,9 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
     identifiers = _identifiers(audit_scope)
     output.mkdir(parents=True)
     raw = output / "raw"
+    licenses = output / "licenses"
     raw.mkdir()
+    licenses.mkdir()
     accepted_sources = []
     documents = []
     chunks = []
@@ -42,12 +47,27 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
             raise CorpusError(f"source manifest record {position} must be an object")
         missing = _missing_fields(record)
         source_id = record.get("source_id", f"record-{position}")
-        if missing:
-            quarantined.append({"source_id": source_id, "reason": "missing_required_metadata", "missing_fields": missing})
+        invalid = _invalid_fields(record, sources_path)
+        if missing or invalid:
+            quarantined.append({
+                "source_id": source_id,
+                "reason": "missing_required_metadata" if missing else "invalid_required_metadata",
+                "missing_fields": missing,
+                "invalid_fields": invalid,
+            })
             continue
         source = _source_path(record, sources_path)
         raw_bytes = source.read_bytes()
         raw_sha256 = _hash(raw_bytes)
+        if raw_sha256 != record["expected_raw_sha256"]:
+            quarantined.append({
+                "source_id": source_id,
+                "document_id": record["document_id"],
+                "reason": "raw_hash_mismatch",
+                "expected_raw_sha256": record["expected_raw_sha256"],
+                "actual_raw_sha256": raw_sha256,
+            })
+            continue
         raw_name = f"{position:03d}-{source.name}"
         shutil.copyfile(source, raw / raw_name)
         text = _normalize(raw_bytes, source)
@@ -62,14 +82,23 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
                 "raw_sha256": raw_sha256,
             })
             continue
+        license_snapshot = _license_snapshot_path(record, sources_path)
+        license_name = f"{position:03d}-{license_snapshot.name}"
+        copied_license = licenses / license_name
+        shutil.copyfile(license_snapshot, copied_license)
         source_row = {
             "source_id": source_id,
             "publisher": record["publisher"],
             "source_url": record["source_url"],
+            "source_locator": record["source_locator"],
             "source_revision_or_release": record["source_revision_or_release"],
+            "retrieved_at_utc": record["retrieved_at_utc"],
+            "expected_raw_sha256": record["expected_raw_sha256"],
             "license_id": record["license_id"],
             "license_url": record["license_url"],
             "copyright_notice": record["copyright_notice"],
+            "license_snapshot_reference": f"licenses/{license_name}",
+            "license_snapshot_sha256": _hash(copied_license.read_bytes()),
             "selection_reason": record["selection_reason"],
             "raw_path": f"raw/{raw_name}",
             "raw_sha256": raw_sha256,
@@ -134,8 +163,57 @@ def _source_path(record: dict[str, object], manifest: Path) -> Path:
     return source
 
 
+def _license_snapshot_path(record: dict[str, object], manifest: Path) -> Path:
+    value = record["license_snapshot_reference"]
+    if not isinstance(value, str) or not value.strip():
+        raise CorpusError("license_snapshot_reference must be a non-empty string")
+    reference = Path(value)
+    if reference.is_absolute():
+        raise CorpusError("license_snapshot_reference must be relative to the sources manifest")
+    root = manifest.parent.resolve()
+    snapshot = (root / reference).resolve()
+    if root not in snapshot.parents or not snapshot.is_file():
+        raise CorpusError("license_snapshot_reference must identify an available local file")
+    return snapshot
+
+
 def _missing_fields(record: dict[str, object]) -> list[str]:
     return [field for field in REQUIRED_SOURCE_FIELDS if record.get(field) in (None, "", [])]
+
+
+def _invalid_fields(record: dict[str, object], manifest: Path) -> list[str]:
+    invalid = []
+    timestamp = record.get("retrieved_at_utc")
+    if timestamp not in (None, "", []) and not _is_utc_timestamp(timestamp):
+        invalid.append("retrieved_at_utc")
+    expected_hash = record.get("expected_raw_sha256")
+    if expected_hash not in (None, "", []) and (
+        not isinstance(expected_hash, str)
+        or re.fullmatch(r"[0-9a-f]{64}", expected_hash) is None
+    ):
+        invalid.append("expected_raw_sha256")
+    locator = record.get("source_locator")
+    if locator not in (None, "", []) and (
+        not isinstance(locator, str) or not locator.strip()
+    ):
+        invalid.append("source_locator")
+    license_reference = record.get("license_snapshot_reference")
+    if license_reference not in (None, "", []):
+        try:
+            _license_snapshot_path(record, manifest)
+        except CorpusError:
+            invalid.append("license_snapshot_reference")
+    return invalid
+
+
+def _is_utc_timestamp(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError:
+        return False
+    return True
 
 
 def _normalize(raw: bytes, source: Path) -> str:
@@ -177,7 +255,7 @@ def _document(record: dict[str, object], source: dict[str, object], text: str) -
         "source_id": source["source_id"],
         "title": record["title"],
         "section_path": record["section_path"],
-        "source_locator": record.get("source_locator", "full_source"),
+        "source_locator": record["source_locator"],
         "text": text,
         "content_sha256": content_sha256,
         "text_language": record.get("text_language", "en"),
