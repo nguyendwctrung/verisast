@@ -25,11 +25,13 @@ def source_record(path: Path, source_id: str = "cwe") -> dict[str, object]:
         "copyright_notice": "Example Publisher",
         "license_snapshot_reference": license_snapshot.name,
         "selection_reason": "registered CWE scope",
-        "document_id": "cwe:CWE-22",
         "title": "Path Traversal",
-        "section_path": ["Mitigations"],
-        "cwe_ids": [22],
-        "programming_languages": ["Java"],
+        "selected_sections": [{
+            "section_path": ["Mitigations"],
+            "cwe_ids": [22],
+            "query_ids": ["java/zipslip"],
+            "programming_languages": ["Java"],
+        }],
     }
 
 
@@ -41,9 +43,100 @@ def read_jsonl(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
+def section_source_record(path: Path, source_id: str = "owasp") -> dict[str, object]:
+    record = source_record(path, source_id)
+    record["selected_sections"] = [
+        {
+            "section_path": ["Path Handling"],
+            "cwe_ids": [22],
+            "query_ids": ["java/zipslip"],
+            "programming_languages": ["Java"],
+        },
+        {
+            "section_path": ["Archive Handling"],
+            "cwe_ids": [22],
+            "query_ids": ["java/zipslip"],
+            "programming_languages": ["Java"],
+        },
+    ]
+    return record
+
+
+def markdown_section(text: str) -> str:
+    return f"# Guidance\n\n## Mitigations\n{text}"
+
+
+def test_ingest_admits_each_registered_markdown_section_once(tmp_path: Path) -> None:
+    source = tmp_path / "guidance.md"
+    source.write_text(
+        "# Guidance\n\n## Path Handling\nReject paths outside the base directory.\n"
+        "\n### Nested Detail\nCanonicalize before resolving.\n\n## Archive Handling\n"
+        "Validate archive entry names before extraction.\n",
+        encoding="utf-8",
+    )
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [section_source_record(source)])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    output = tmp_path / "corpus"
+    sources = read_jsonl(output / "sources.jsonl")
+    documents = read_jsonl(output / "documents.jsonl")
+    chunks = read_jsonl(output / "chunks.jsonl")
+    raw_sha256 = hashlib.sha256(source.read_bytes()).hexdigest()
+
+    assert result["status"] == "passed"
+    assert result["output"] == str(output)
+    assert result["sources"] == 1
+    assert result["documents"] == 2
+    assert result["chunks"] == 2
+    assert len(sources) == 1
+    assert len(list((output / "raw").iterdir())) == 1
+    assert [document["section_path"] for document in documents] == [
+        ["Path Handling"],
+        ["Archive Handling"],
+    ]
+    assert [(document["source_line_start"], document["source_line_end"]) for document in documents] == [
+        (3, 7),
+        (9, 10),
+    ]
+    assert all(document["raw_source_sha256"] == raw_sha256 for document in documents)
+    assert all(document["extractor_version"] == "markdown-atx-sections-v1" for document in documents)
+    assert [chunk["document_id"] for chunk in chunks] == [document["document_id"] for document in documents]
+    assert len({document["document_id"] for document in documents}) == 2
+    assert len({chunk["chunk_id"] for chunk in chunks}) == 2
+
+
+def test_ingest_quarantines_a_missing_registered_section_path(tmp_path: Path) -> None:
+    source = tmp_path / "guidance.md"
+    source.write_text("# Guidance\n\n## Path Handling\nReject paths outside the base directory.\n", encoding="utf-8")
+    record = section_source_record(source)
+    record["selected_sections"] = [{
+        "section_path": ["Missing Section"],
+        "cwe_ids": [22],
+        "query_ids": ["java/zipslip"],
+        "programming_languages": ["Java"],
+    }]
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    output = tmp_path / "corpus"
+    quarantined = read_jsonl(output / "quarantined.jsonl")
+    assert result["status"] == "failed"
+    assert quarantined == [{
+        "source_id": "owasp",
+        "reason": "section_path_not_found",
+        "section_path": ["Missing Section"],
+    }]
+    assert not read_jsonl(output / "documents.jsonl")
+    assert not read_jsonl(output / "chunks.jsonl")
+
+
 def test_ingest_creates_stable_documents_chunks_and_manifest(tmp_path: Path) -> None:
     source = tmp_path / "cwe.txt"
-    source.write_text("  Validate a canonical path.\r\n\r\nReject paths outside the base.  \r\n", encoding="utf-8")
+    source.write_text(markdown_section("  Validate a canonical path.\r\n\r\nReject paths outside the base.  \r\n"), encoding="utf-8")
     manifest = tmp_path / "sources.jsonl"
     write_manifest(manifest, [source_record(source)])
 
@@ -60,10 +153,10 @@ def test_ingest_creates_stable_documents_chunks_and_manifest(tmp_path: Path) -> 
 
     assert result_a["status"] == "passed"
     assert result_b["status"] == "passed"
-    assert document_a["document_id"] == document_b["document_id"] == "cwe:CWE-22"
+    assert document_a["document_id"] == document_b["document_id"]
     assert document_a["document_version_id"] == document_b["document_version_id"]
     assert chunk_a["chunk_id"] == chunk_b["chunk_id"]
-    assert document_a["text"] == "Validate a canonical path.\n\nReject paths outside the base."
+    assert document_a["text"] == "## Mitigations\nValidate a canonical path.\n\nReject paths outside the base."
     assert source_a["raw_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
     assert (output_a / source_a["raw_path"]).read_bytes() == source.read_bytes()
     assert document_a["source_locator"] == "section:mitigations"
@@ -74,10 +167,10 @@ def test_ingest_creates_stable_documents_chunks_and_manifest(tmp_path: Path) -> 
 def test_changed_content_changes_version_and_chunk_identity(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
     manifest = tmp_path / "sources.jsonl"
-    source.write_text("Validate the canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Validate the canonical path."), encoding="utf-8")
     write_manifest(manifest, [source_record(source)])
     ingest(manifest, tmp_path / "corpus-a", {"target_identifiers": []})
-    source.write_text("Validate and reject the canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Validate and reject the canonical path."), encoding="utf-8")
     write_manifest(manifest, [source_record(source)])
     ingest(manifest, tmp_path / "corpus-b", {"target_identifiers": []})
 
@@ -93,7 +186,7 @@ def test_changed_content_changes_version_and_chunk_identity(tmp_path: Path) -> N
 
 def test_missing_required_provenance_is_quarantined(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     record = source_record(source)
     record.pop("license_id")
     manifest = tmp_path / "sources.jsonl"
@@ -116,7 +209,7 @@ def test_missing_required_provenance_is_quarantined(tmp_path: Path) -> None:
 ])
 def test_leakage_audit_excludes_prohibited_material(tmp_path: Path, text: str, identifier: str) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text(text, encoding="utf-8")
+    source.write_text(markdown_section(text), encoding="utf-8")
     manifest = tmp_path / "sources.jsonl"
     write_manifest(manifest, [source_record(source)])
 
@@ -130,7 +223,7 @@ def test_leakage_audit_excludes_prohibited_material(tmp_path: Path, text: str, i
 
 def test_general_guidance_is_admitted_without_target_overlap(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Resolve the archive entry against a base directory and reject paths outside it.", encoding="utf-8")
+    source.write_text(markdown_section("Resolve the archive entry against a base directory and reject paths outside it."), encoding="utf-8")
     manifest = tmp_path / "sources.jsonl"
     write_manifest(manifest, [source_record(source, "owasp")])
 
@@ -148,7 +241,7 @@ def test_general_guidance_is_admitted_without_target_overlap(tmp_path: Path) -> 
 ])
 def test_missing_freeze_readiness_metadata_is_quarantined(tmp_path: Path, field: str) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     record = source_record(source)
     record.pop(field)
     manifest = tmp_path / "sources.jsonl"
@@ -174,7 +267,7 @@ def test_invalid_freeze_readiness_metadata_is_quarantined(
     value: object,
 ) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     record = source_record(source)
     record[field] = value
     manifest = tmp_path / "sources.jsonl"
@@ -190,7 +283,7 @@ def test_invalid_freeze_readiness_metadata_is_quarantined(
 
 def test_raw_hash_mismatch_is_quarantined(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     record = source_record(source)
     record["expected_raw_sha256"] = "0" * 64
     manifest = tmp_path / "sources.jsonl"
@@ -208,7 +301,7 @@ def test_raw_hash_mismatch_is_quarantined(tmp_path: Path) -> None:
 
 def test_ingest_refuses_existing_output_directory(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     manifest = tmp_path / "sources.jsonl"
     write_manifest(manifest, [source_record(source)])
     output = tmp_path / "corpus"
@@ -220,7 +313,7 @@ def test_ingest_refuses_existing_output_directory(tmp_path: Path) -> None:
 
 def test_cli_corpus_dispatches_ingestion(tmp_path: Path) -> None:
     source = tmp_path / "guidance.txt"
-    source.write_text("Use a canonical path.", encoding="utf-8")
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
     sources = tmp_path / "sources.jsonl"
     scope = tmp_path / "scope.json"
     output = tmp_path / "corpus"

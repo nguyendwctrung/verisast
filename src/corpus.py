@@ -14,9 +14,15 @@ REQUIRED_SOURCE_FIELDS = (
     "source_id", "path", "publisher", "source_url", "source_revision_or_release",
     "retrieved_at_utc", "expected_raw_sha256", "source_locator", "license_id",
     "license_url", "copyright_notice", "license_snapshot_reference",
-    "selection_reason", "document_id", "title", "section_path", "cwe_ids",
-    "programming_languages",
+    "selection_reason", "title", "selected_sections",
 )
+
+REQUIRED_SECTION_FIELDS = (
+    "section_path", "cwe_ids", "query_ids", "programming_languages",
+)
+
+EXTRACTOR_VERSION = "markdown-atx-sections-v1"
+CHUNKER_VERSION = "corpus-v1-markdown-section"
 
 DEFAULT_PROHIBITED_MARKERS = (
     "advisory", "benchmark label", "ground truth", "patch", "vulnerable revision",
@@ -144,7 +150,6 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
         if raw_sha256 != record["expected_raw_sha256"]:
             quarantined.append({
                 "source_id": source_id,
-                "document_id": record["document_id"],
                 "reason": "raw_hash_mismatch",
                 "expected_raw_sha256": record["expected_raw_sha256"],
                 "actual_raw_sha256": raw_sha256,
@@ -152,12 +157,11 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
             continue
         raw_name = f"{position:03d}-{source.name}"
         shutil.copyfile(source, raw / raw_name)
-        text = _normalize(raw_bytes, source)
-        matches = _matches(text, identifiers)
+        raw_text = _decode_utf8(raw_bytes, source)
+        matches = _matches(_normalize_text(raw_text, source), identifiers)
         if matches:
             excluded.append({
                 "source_id": source_id,
-                "document_id": record["document_id"],
                 "reason": "prohibited_material",
                 "matches": matches,
                 "source_path": str(source.resolve()),
@@ -185,11 +189,34 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
             "raw_path": f"raw/{raw_name}",
             "raw_sha256": raw_sha256,
         }
-        document = _document(record, source_row, text)
-        chunk = _chunk(document)
+        try:
+            extracted_sections = extract_markdown_sections(raw_text, record["selected_sections"])
+        except CorpusError as error:
+            quarantined.append(_section_quarantine(source_id, error))
+            continue
+        selected = []
+        section_matches = []
+        for section, extracted in zip(record["selected_sections"], extracted_sections):
+            text = _normalize_text(extracted["text"], source)
+            section_match = _matches(text, identifiers)
+            if section_match:
+                section_matches.append({"section_path": extracted["section_path"], "matches": section_match})
+                continue
+            selected.append((section, extracted, text))
+        if section_matches:
+            excluded.append({
+                "source_id": source_id,
+                "reason": "prohibited_material_in_section",
+                "matches": section_matches,
+                "source_path": str(source.resolve()),
+                "raw_sha256": raw_sha256,
+            })
+            continue
         accepted_sources.append(source_row)
-        documents.append(document)
-        chunks.append(chunk)
+        for section, extracted, text in selected:
+            document = _document(record, source_row, section, extracted, text)
+            documents.append(document)
+            chunks.append(_chunk(document))
 
     _write_jsonl(output / "sources.jsonl", accepted_sources)
     _write_jsonl(output / "documents.jsonl", documents)
@@ -210,8 +237,9 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
     manifest = {
         "schema_version": 1,
         "status": status,
-        "normalizer_version": "corpus-v1",
-        "chunker_version": "corpus-v1-single-section",
+        "normalizer_version": "corpus-v1-markdown-section",
+        "extractor_version": EXTRACTOR_VERSION,
+        "chunker_version": CHUNKER_VERSION,
         "audit_scope_sha256": _canonical_hash(audit_scope),
         "source_manifest_sha256": _hash(sources_path.read_bytes()),
         "sources_sha256": _hash((output / "sources.jsonl").read_bytes()),
@@ -285,6 +313,9 @@ def _invalid_fields(record: dict[str, object], manifest: Path) -> list[str]:
             _license_snapshot_path(record, manifest)
         except CorpusError:
             invalid.append("license_snapshot_reference")
+    sections = record.get("selected_sections")
+    if sections not in (None, "", []) and not _valid_sections(sections):
+        invalid.append("selected_sections")
     return invalid
 
 
@@ -298,17 +329,44 @@ def _is_utc_timestamp(value: object) -> bool:
     return True
 
 
-def _normalize(raw: bytes, source: Path) -> str:
+def _decode_utf8(raw: bytes, source: Path) -> str:
     try:
-        text = raw.decode("utf-8")
+        return raw.decode("utf-8")
     except UnicodeDecodeError as error:
         raise CorpusError(f"source is not UTF-8: {source}") from error
+
+
+def _normalize_text(text: str, source: Path) -> str:
     lines = [line.strip() for line in text.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
     normalized = "\n".join(lines)
     normalized = re.sub(r"\n{3,}", "\n\n", normalized).strip()
     if not normalized:
         raise CorpusError(f"source has no normalized text: {source}")
     return normalized
+
+
+def _valid_sections(value: object) -> bool:
+    if not isinstance(value, list) or not value:
+        return False
+    for section in value:
+        if not isinstance(section, dict):
+            return False
+        if any(section.get(field) in (None, "", []) for field in REQUIRED_SECTION_FIELDS):
+            return False
+        try:
+            _section_path(section)
+        except CorpusError:
+            return False
+        cwe_ids = section["cwe_ids"]
+        query_ids = section["query_ids"]
+        languages = section["programming_languages"]
+        if not isinstance(cwe_ids, list) or not all(isinstance(item, int) for item in cwe_ids):
+            return False
+        if not isinstance(query_ids, list) or not all(isinstance(item, str) and item.strip() for item in query_ids):
+            return False
+        if not isinstance(languages, list) or not all(isinstance(item, str) and item.strip() for item in languages):
+            return False
+    return True
 
 
 def _identifiers(scope: dict[str, object]) -> list[str]:
@@ -323,12 +381,37 @@ def _matches(text: str, identifiers: list[str]) -> list[str]:
     return [identifier for identifier in identifiers if identifier in folded]
 
 
-def _document(record: dict[str, object], source: dict[str, object], text: str) -> dict[str, object]:
-    document_id = record["document_id"]
-    if not isinstance(document_id, str):
-        raise CorpusError("document_id must be a string")
+def _section_quarantine(source_id: object, error: CorpusError) -> dict[str, object]:
+    message = str(error)
+    for prefix, reason in (
+        ("section path not found: ", "section_path_not_found"),
+        ("section path is ambiguous: ", "section_path_ambiguous"),
+    ):
+        if message.startswith(prefix):
+            return {
+                "source_id": source_id,
+                "reason": reason,
+                "section_path": message.removeprefix(prefix).split(" > "),
+            }
+    return {"source_id": source_id, "reason": "section_extraction_error", "error": message}
+
+
+def _document(
+    record: dict[str, object],
+    source: dict[str, object],
+    section: dict[str, object],
+    extracted: dict[str, object],
+    text: str,
+) -> dict[str, object]:
+    section_path = extracted["section_path"]
     content_sha256 = _hash(text.encode("utf-8"))
-    version_seed = {"document_id": document_id, "source_revision_or_release": source["source_revision_or_release"], "content_sha256": content_sha256}
+    identity_seed = {
+        "source_id": source["source_id"],
+        "source_revision_or_release": source["source_revision_or_release"],
+        "section_path": section_path,
+    }
+    document_id = f"document-v1:{_canonical_hash(identity_seed)}"
+    version_seed = {**identity_seed, "content_sha256": content_sha256, "extractor_version": EXTRACTOR_VERSION}
     document_version_id = f"document-v1:{_canonical_hash(version_seed)}"
     return {
         "document_schema_version": 1,
@@ -336,17 +419,21 @@ def _document(record: dict[str, object], source: dict[str, object], text: str) -
         "document_version_id": document_version_id,
         "source_id": source["source_id"],
         "title": record["title"],
-        "section_path": record["section_path"],
+        "section_path": section_path,
+        "source_line_start": extracted["source_line_start"],
+        "source_line_end": extracted["source_line_end"],
+        "raw_source_sha256": source["raw_sha256"],
         "source_locator": record["source_locator"],
         "text": text,
         "content_sha256": content_sha256,
         "text_language": record.get("text_language", "en"),
-        "programming_languages": record["programming_languages"],
-        "cwe_ids": record["cwe_ids"],
-        "query_ids": record.get("query_ids", []),
-        "technology_or_framework": record.get("technology_or_framework", []),
+        "programming_languages": section["programming_languages"],
+        "cwe_ids": section["cwe_ids"],
+        "query_ids": section["query_ids"],
+        "technology_or_framework": section.get("technology_or_framework", []),
         "selection_reason": source["selection_reason"],
-        "normalizer_version": "corpus-v1",
+        "normalizer_version": "corpus-v1-markdown-section",
+        "extractor_version": EXTRACTOR_VERSION,
         "leakage_status": "accepted",
         "audit_reference": "leakage-audit.json",
         "source": source,
@@ -354,7 +441,7 @@ def _document(record: dict[str, object], source: dict[str, object], text: str) -
 
 
 def _chunk(document: dict[str, object]) -> dict[str, object]:
-    seed = {"document_version_id": document["document_version_id"], "section_path": document["section_path"], "content_sha256": document["content_sha256"], "chunker_version": "corpus-v1-single-section"}
+    seed = {"document_version_id": document["document_version_id"], "section_path": document["section_path"], "content_sha256": document["content_sha256"], "chunker_version": CHUNKER_VERSION}
     return {
         "chunk_schema_version": 1,
         "chunk_id": f"chunk-v1:{_canonical_hash(seed)}",
@@ -364,7 +451,11 @@ def _chunk(document: dict[str, object]) -> dict[str, object]:
         "source_locator": document["source_locator"],
         "text": document["text"],
         "content_sha256": document["content_sha256"],
-        "chunker_version": "corpus-v1-single-section",
+        "raw_source_sha256": document["raw_source_sha256"],
+        "source_line_start": document["source_line_start"],
+        "source_line_end": document["source_line_end"],
+        "extractor_version": document["extractor_version"],
+        "chunker_version": CHUNKER_VERSION,
         "source_id": document["source_id"],
         "license_id": document["source"]["license_id"],
     }
