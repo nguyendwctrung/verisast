@@ -24,6 +24,88 @@ DEFAULT_PROHIBITED_MARKERS = (
 )
 
 
+def extract_markdown_sections(
+    raw_text: str,
+    selected_sections: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Extract pre-registered ATX Markdown sections in manifest order.
+
+    The document-level H1 is treated as a title rather than part of an
+    admission path. Each selected path must resolve to exactly one heading.
+    """
+    if not isinstance(raw_text, str):
+        raise CorpusError("raw Markdown text must be a string")
+    lines = raw_text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    headings = _markdown_headings(lines)
+    extracted = []
+    for section in selected_sections:
+        path = _section_path(section)
+        matches = [heading for heading in headings if heading["section_path"] == path]
+        label = " > ".join(path)
+        if not matches:
+            raise CorpusError(f"section path not found: {label}")
+        if len(matches) > 1:
+            raise CorpusError(f"section path is ambiguous: {label}")
+        heading = matches[0]
+        start = heading["source_line_start"]
+        end = _section_end(headings, heading, len(lines))
+        while end >= start and not lines[end - 1].strip():
+            end -= 1
+        extracted.append({
+            "section_path": path,
+            "source_line_start": start,
+            "source_line_end": end,
+            "text": "\n".join(lines[start - 1:end]).rstrip(),
+        })
+    return extracted
+
+
+def _markdown_headings(lines: list[str]) -> list[dict[str, object]]:
+    headings = []
+    ancestry: list[tuple[int, str]] = []
+    pattern = re.compile(r"^[ ]{0,3}(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$")
+    for line_number, line in enumerate(lines, start=1):
+        match = pattern.match(line)
+        if match is None:
+            continue
+        level = len(match.group(1))
+        title = match.group(2).strip()
+        if not title:
+            continue
+        ancestry = [item for item in ancestry if item[0] < level]
+        ancestry.append((level, title))
+        headings.append({
+            "level": level,
+            "section_path": [item[1] for item in ancestry if item[0] != 1],
+            "source_line_start": line_number,
+        })
+    return headings
+
+
+def _section_path(section: dict[str, object]) -> list[str]:
+    path = section.get("section_path") if isinstance(section, dict) else None
+    if not isinstance(path, list) or not path or not all(
+        isinstance(item, str) and item.strip() for item in path
+    ):
+        raise CorpusError("section_path must be a non-empty list of non-empty strings")
+    return path
+
+
+def _section_end(
+    headings: list[dict[str, object]],
+    selected: dict[str, object],
+    line_count: int,
+) -> int:
+    selected_start = selected["source_line_start"]
+    selected_level = selected["level"]
+    for heading in headings:
+        if heading["source_line_start"] <= selected_start:
+            continue
+        if heading["level"] <= selected_level:
+            return heading["source_line_start"] - 1
+    return line_count
+
+
 def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> dict[str, object]:
     if output.exists():
         raise CorpusError(f"output already exists: {output}")
