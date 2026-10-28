@@ -24,18 +24,18 @@ try {
         exit $LASTEXITCODE
     }
 
-    $source = Join-Path $run "guidance.txt"
+    $source = Join-Path $run "guidance.md"
     $license = Join-Path $run "license.txt"
-    [System.IO.File]::WriteAllText($source, "Resolve an archive entry against a base directory and reject paths outside it.`n", [System.Text.UTF8Encoding]::new($false))
+    [System.IO.File]::WriteAllText($source, "# Canonical Path Guidance`n`n## Mitigations`nResolve an archive entry against a base directory and reject paths outside it.`n", [System.Text.UTF8Encoding]::new($false))
     [System.IO.File]::WriteAllText($license, "Creative Commons Attribution 4.0 International`n", [System.Text.UTF8Encoding]::new($false))
     $sourceHash = (Get-FileHash -LiteralPath $source -Algorithm SHA256).Hash.ToLowerInvariant()
     $sources = Join-Path $run "sources.jsonl"
     $record = [ordered]@{
         source_id = "local-guidance"
-        path = "guidance.txt"
+        path = "guidance.md"
         publisher = "Local validation fixture"
         source_url = "https://example.invalid/local-guidance"
-        source_locator = "section:mitigations"
+        source_locator = "Mitigations"
         source_revision_or_release = "fixture-v1"
         retrieved_at_utc = "2026-10-27T00:00:00Z"
         expected_raw_sha256 = $sourceHash
@@ -44,11 +44,15 @@ try {
         copyright_notice = "Local validation fixture"
         license_snapshot_reference = "license.txt"
         selection_reason = "bounded ingestion validation"
-        document_id = "fixture:canonical-path-guidance"
         title = "Canonical Path Guidance"
-        section_path = @("Mitigations")
-        cwe_ids = @(22)
-        programming_languages = @("Java")
+        selected_sections = @(
+            [ordered]@{
+                section_path = @("Mitigations")
+                cwe_ids = @(22)
+                query_ids = @("java/zipslip")
+                programming_languages = @("Java")
+            }
+        )
     }
     [System.IO.File]::WriteAllText($sources, (($record | ConvertTo-Json -Compress -Depth 8) + "`n"), [System.Text.UTF8Encoding]::new($false))
     $scope = Join-Path $run "audit-scope.json"
@@ -62,6 +66,8 @@ try {
     Get-Content -LiteralPath (Join-Path $corpus "manifest.json")
     Get-Content -LiteralPath (Join-Path $corpus "leakage-audit.json")
     Get-Content -LiteralPath (Join-Path $corpus "sources.jsonl")
+    Get-Content -LiteralPath (Join-Path $corpus "documents.jsonl")
+    Get-Content -LiteralPath (Join-Path $corpus "chunks.jsonl")
     Get-ChildItem -LiteralPath (Join-Path $corpus "licenses") | Select-Object Name, Length
 } finally {
     Pop-Location
