@@ -33,3 +33,5 @@ artifacts/
 .cache/
 
 .pytest-*/
+
+/inventory/*/provenance/downloaded-html/

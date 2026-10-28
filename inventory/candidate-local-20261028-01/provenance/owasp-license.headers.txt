@@ -1,0 +1,38 @@
+HTTP/1.1 308 Permanent Redirect
+Cache-Control: public, max-age=0, must-revalidate
+Content-Type: text/plain
+Date: Wed, 28 Oct 2026 08:04:24 GMT
+Location: /projects/cheat-sheet-series
+Refresh: 0;url=/projects/cheat-sheet-series
+Server: Vercel
+Strict-Transport-Security: max-age=63072000
+X-Vercel-Id: hkg1::mzx75-1793174664160-12a3f7d81ef9
+Transfer-Encoding: chunked
+
+HTTP/1.1 200 OK
+Age: 0
+Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://remssssfmrgmyzqnpeas.supabase.co https://*.supabase.co https://owasp.org https://dependencytrack.org https://assets.ot.digital https://images.unsplash.com https://i.ytimg.com https://img.youtube.com https://*.googleusercontent.com data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://remssssfmrgmyzqnpeas.supabase.co wss://remssssfmrgmyzqnpeas.supabase.co; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://calendar.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; upgrade-insecure-requests; report-uri /api/csp-report; report-to csp-endpoint
+Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' 'strict-dynamic' 'nonce-SKT6FbDJVJl0TM6sHzYjbA==' 'sha256-HVSHUDBFVh3cy46f/D1aFZagalYezfdeH0BxbeWZLSA='; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' https://remssssfmrgmyzqnpeas.supabase.co https://*.supabase.co https://owasp.org https://dependencytrack.org https://assets.ot.digital https://images.unsplash.com https://i.ytimg.com https://img.youtube.com https://*.googleusercontent.com data:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://remssssfmrgmyzqnpeas.supabase.co wss://remssssfmrgmyzqnpeas.supabase.co; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://calendar.google.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; report-uri /api/csp-report; report-to csp-endpoint
+Content-Type: text/html; charset=utf-8
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: same-origin
+Date: Wed, 28 Oct 2026 08:04:24 GMT
+Link: </_next/static/immutable/media/8e6fa89aa22d24ec-s.p.1bg6trwi21i5q.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/immutable/media/a083361d37caf3d1-s.p.00u70rl5ce7ry.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/immutable/media/a218039a3287bcfd-s.p.17e3l4txdrufi.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/immutable/media/e2334d715941921e-s.p.2g9xiodaln20i.woff2>; rel=preload; as="font"; crossorigin=""; type="font/woff2", </_next/static/immutable/chunks/2cc9781d63cj0.css>; rel=preload; as="style", </_next/static/immutable/chunks/21q6ru18wr74k.css>; rel=preload; as="style"
+Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self), interest-cohort=(), publickey-credentials-get=(self), publickey-credentials-create=(self)
+Referrer-Policy: strict-origin-when-cross-origin
+Report-To: {"group":"csp-endpoint","max_age":10886400,"endpoints":[{"url":"https://owasp.org/api/csp-report"}]}
+Reporting-Endpoints: csp-endpoint="https://owasp.org/api/csp-report"
+Server: Vercel
+Set-Cookie: owasp-locale=en; Path=/; Expires=Thu, 28 Oct 2027 08:04:24 GMT; Max-Age=31536000; SameSite=lax
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+Vary: rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-Matched-Path: /projects/[slug]
+X-Powered-By: Next.js
+X-Vercel-Cache: MISS
+X-Vercel-Id: hkg1::iad1::t6lkl-1793174664236-765b6a632008
+X-Xss-Protection: 1; mode=block
+Transfer-Encoding: chunked
+
