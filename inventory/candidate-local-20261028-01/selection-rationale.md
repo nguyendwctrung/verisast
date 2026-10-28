@@ -1,7 +1,7 @@
 # Selection Rationale
 
-**Status:** snapshots acquired and source manifest prepared; audit and
-admission pending.
+**Status:** snapshots acquired; section-only admission contract accepted;
+implementation, audit, and admission pending.
 
 ## Selected source identities
 
@@ -26,8 +26,11 @@ admission pending.
 | `owasp-input-validation-20261028` | `Input Validation Cheat Sheet` | `Allowlist vs Denylist; Parse Safely, Then Validate` | General validation and decoding guidance relevant to untrusted archive-entry path handling. |
 | `owasp-secure-code-review-20261028` | `Secure Code Review Cheat Sheet` | `Input Validation Vulnerabilities; Review Checklists > Input Validation` | General review guidance for unsafe file-path construction and directory traversal. |
 
-- Section path is a retrieval-scope declaration. The raw snapshots remain
-  unchanged and the source manifest must preserve their exact hashes.
+- Each listed section path is a corpus-admission boundary. The raw snapshots
+  remain unchanged and the source manifest must preserve their exact hashes.
+- The committed compatibility manifest must not be frozen with the current
+  full-document ingester. It will be migrated to the accepted
+  `selected_sections` contract only alongside the tested extractor.
 - All records are tagged for CWE-22, Java, and `java/zipslip`; this is a
   relevance mapping, not a vulnerability label or target answer.
 
