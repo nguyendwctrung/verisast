@@ -1,7 +1,8 @@
 # Selection Rationale
 
 **Status:** snapshots acquired; four section-level admissions registered;
-implementation is complete, while audit and corpus admission remain pending.
+candidate extraction, automated audit, and manual review completed. A separate
+freeze run and corpus-admission decision remain pending.
 
 ## Selected source identities
 
@@ -15,7 +16,7 @@ implementation is complete, while audit and corpus admission remain pending.
 - Local license snapshot filename:
   `licenses/owasp-cheat-sheet-series-license-20261028.html`.
 - Retrieval timestamp (UTC): `2026-10-28T08:09:18Z` for File Upload and
-  `2026-10-28T08:09:19Z` for Input Validation and Secure Code Review.
+  `2026-10-28T08:09:19Z` for Input Validation.
 
 ## Selected content
 
@@ -58,8 +59,17 @@ sufficiently narrow heading boundary.
   match must be excluded rather than edited.
 - General examples retained and rationale: only after lexical audit and manual
   review confirm they do not disclose a target-specific answer.
-- Manual reviewer and review date: pending.
-- Disposition: snapshots acquired; not admitted.
+- Candidate extraction evidence: `corpus-v1-6fb146619be86ca1`, status
+  `passed`, 2 sources, 4 documents, 4 chunks, zero excluded records, and zero
+  quarantined records.
+- Manual reviewer: Trung Nguyen.
+- Manual review date: `2026-10-28`.
+- Manual review conclusion: all four registered sections matched their
+  pre-registered heading paths and line ranges; review found general security
+  guidance only and no target repository, CVE, commit, patch, label,
+  ground-truth, fixed/vulnerable, or target-answer material.
+- Disposition: manual review passed; eligible for a separate freeze run, not
+  admitted.
 
 ## License and redistribution review
 
