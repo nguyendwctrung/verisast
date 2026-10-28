@@ -1,7 +1,7 @@
 # Selection Rationale
 
-**Status:** snapshots acquired; section-only admission contract accepted;
-implementation, audit, and admission pending.
+**Status:** snapshots acquired; four section-level admissions registered;
+implementation is complete, while audit and corpus admission remain pending.
 
 ## Selected source identities
 
@@ -9,7 +9,6 @@ implementation, audit, and admission pending.
 | --- | --- | --- | --- |
 | `owasp-file-upload-20261028` | OWASP Foundation | `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html` | `sources/owasp-file-upload-9d41c054686e.md` |
 | `owasp-input-validation-20261028` | OWASP Foundation | `https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html` | `sources/owasp-input-validation-9d41c054686e.md` |
-| `owasp-secure-code-review-20261028` | OWASP Foundation | `https://cheatsheetseries.owasp.org/cheatsheets/Secure_Code_Review_Cheat_Sheet.html` | `sources/owasp-secure-code-review-9d41c054686e.md` |
 
 - Release, commit, or version: OWASP CheatSheetSeries commit
   `9d41c054686e35fb56070b4b6271ae2829edea6a`.
@@ -22,27 +21,32 @@ implementation, audit, and admission pending.
 
 | Source ID | Exact title | Stable section locator | CWE and query relevance |
 | --- | --- | --- | --- |
-| `owasp-file-upload-20261028` | `File Upload Cheat Sheet` | `File Upload Protection > Filename Safety; Upload and Download Limits` | General archive/file-name and storage guidance relevant to CWE-22 and the Java Zip Slip query scope. |
-| `owasp-input-validation-20261028` | `Input Validation Cheat Sheet` | `Allowlist vs Denylist; Parse Safely, Then Validate` | General validation and decoding guidance relevant to untrusted archive-entry path handling. |
-| `owasp-secure-code-review-20261028` | `Secure Code Review Cheat Sheet` | `Input Validation Vulnerabilities; Review Checklists > Input Validation` | General review guidance for unsafe file-path construction and directory traversal. |
+| `owasp-file-upload-20261028` | `File Upload Cheat Sheet` | `File Upload Protection > Filename Safety` | General handling of untrusted filenames, including allowlisted characters and traversal-related restrictions. |
+| `owasp-file-upload-20261028` | `File Upload Cheat Sheet` | `File Upload Protection > Upload and Download Limits` | General ZIP extraction-size and resource-limit guidance. |
+| `owasp-input-validation-20261028` | `Input Validation Cheat Sheet` | `Input Validation Strategies > Allowlist vs Denylist` | General allowlist validation guidance for untrusted input. |
+| `owasp-input-validation-20261028` | `Input Validation Cheat Sheet` | `Implementing Input Validation > Parse Safely, Then Validate` | General parsing, decoding, and validation-order guidance. |
 
 - Each listed section path is a corpus-admission boundary. The raw snapshots
   remain unchanged and the source manifest must preserve their exact hashes.
-- The committed compatibility manifest must not be frozen with the current
-  full-document ingester. It will be migrated to the accepted
-  `selected_sections` contract only alongside the tested extractor.
+- The registered manifest uses the accepted `selected_sections` contract and
+  must not be expanded with a full-document fallback.
 - All records are tagged for CWE-22, Java, and `java/zipslip`; this is a
   relevance mapping, not a vulnerability label or target answer.
 
 ## Pre-registration rationale
 
-These three documents were selected before acquiring snapshots and before
-examining any Variant C output. They are official OWASP guidance with one
-consistent license and provide complementary general knowledge about untrusted
-file names and paths: validation, secure storage and upload handling, and
-review of unsafe path construction. The content is relevant to the registered
-CWE-22 and Java Zip Slip query scope without describing any target repository,
-target version, expected verdict, patch, or experiment outcome.
+The two registered documents were selected before acquiring snapshots and
+before examining any Variant C output. They are official OWASP guidance with
+one consistent license and provide complementary general knowledge about
+untrusted file names and paths: allowlist validation, parsing order, and
+archive handling. The content is relevant to the registered CWE-22 and Java
+Zip Slip query scope without describing any target repository, target version,
+expected verdict, patch, or experiment outcome.
+
+The Secure Code Review snapshot is retained as an acquired candidate with
+provenance, but it is not registered for corpus v1: its relevant path-traversal
+guidance is embedded in broader review sections, so it cannot be admitted at a
+sufficiently narrow heading boundary.
 
 ## Leakage review
 
