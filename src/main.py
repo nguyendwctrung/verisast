@@ -6,6 +6,7 @@ from pathlib import Path
 from corpus import CorpusError, ingest
 from context import build as build_context, write as write_context
 from evaluate import score
+from retrieval_evaluate import EvaluationError, run as run_retrieval_evaluation
 from sarif import normalize, read as read_findings, write as write_findings
 from scan import ScanError, run as run_scan
 from triage import TriageError, run as run_triage
@@ -58,6 +59,12 @@ def main(argv: list[str] | None = None) -> int:
     corpus.add_argument("--audit-scope", type=Path, required=True)
     corpus.add_argument("--output", type=Path, required=True)
 
+    retrieval = commands.add_parser("retrieval")
+    retrieval_commands = retrieval.add_subparsers(dest="retrieval_command", required=True)
+    retrieval_evaluate = retrieval_commands.add_parser("evaluate")
+    retrieval_evaluate.add_argument("--protocol", type=Path, required=True)
+    retrieval_evaluate.add_argument("--run", type=Path, required=True)
+
     args = parser.parse_args(argv)
     try:
         if args.command == "scan":
@@ -83,9 +90,11 @@ def main(argv: list[str] | None = None) -> int:
             if not isinstance(audit_scope, dict):
                 raise CorpusError("audit scope must be an object")
             result = ingest(args.sources, args.output, audit_scope)
+        elif args.command == "retrieval":
+            result = run_retrieval_evaluation(args.protocol, args.run)
         else:
             result = run_triage(args.findings, args.contexts, args.prompt, args.config, args.run)
-    except (CorpusError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
+    except (CorpusError, EvaluationError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
         print(f"ERROR={error}", file=sys.stderr)
         return 1
     print(json.dumps(result, indent=2))
