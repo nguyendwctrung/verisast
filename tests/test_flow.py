@@ -4,7 +4,7 @@ from pathlib import Path
 from context import build
 from evaluate import score
 from main import main
-from ollama_client import generate, metadata, running_model
+from ollama_client import embed, generate, metadata, running_model
 from sarif import normalize
 from scan import _raw_result_count
 from triage import _guard_contract, _guard_packet, _input_hashes, _progress_block, _progress_event, _request, _schema_for
@@ -167,6 +167,42 @@ def test_ollama_request_includes_verdict_schema(monkeypatch) -> None:
         "options": {"temperature": 0.25, "num_predict": 34, "num_ctx": 3072},
     }
     assert captured["timeout"] == 12
+
+
+def test_ollama_embed_posts_batched_inputs(monkeypatch) -> None:
+    captured: dict[str, object] = {}
+
+    class Response:
+        def read(self) -> bytes:
+            return b'{"model":"bge-m3:latest","embeddings":[[1.0,0.0],[0.0,1.0]]}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            return None
+
+    def open_url(request, timeout: int):
+        captured["url"] = request.full_url
+        captured["body"] = json.loads(request.data.decode("utf-8"))
+        captured["timeout"] = timeout
+        return Response()
+
+    monkeypatch.setattr("ollama_client.urllib.request.urlopen", open_url)
+
+    assert embed(
+        "http://localhost:11434", "bge-m3:latest", ["query", "document"], 12, "0s"
+    ) == [[1.0, 0.0], [0.0, 1.0]]
+    assert captured == {
+        "url": "http://localhost:11434/api/embed",
+        "body": {
+            "model": "bge-m3:latest",
+            "input": ["query", "document"],
+            "truncate": False,
+            "keep_alive": "0s",
+        },
+        "timeout": 12,
+    }
 
 
 def test_ollama_metadata_keeps_observed_model_digest(monkeypatch) -> None:

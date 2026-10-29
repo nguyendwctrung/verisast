@@ -4,6 +4,7 @@ import math
 import re
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Callable, Sequence
 
 
 class RetrievalError(ValueError):
@@ -14,6 +15,7 @@ REQUIRED_CHUNK_FIELDS = (
     "chunk_id", "document_id", "source_id", "section_path", "text", "cwe_ids",
     "programming_languages", "content_sha256", "raw_source_sha256",
 )
+EmbeddingFunction = Callable[[list[str]], Sequence[Sequence[object]]]
 
 
 def filter_eligible_chunks(
@@ -58,6 +60,50 @@ def rank_bm25(query: str, chunks: list[dict[str, object]]) -> list[dict[str, obj
     for rank, item in enumerate(ranked, start=1):
         item["sparse_rank"] = rank
     return ranked
+
+
+def rank_dense(
+    query: str,
+    chunks: list[dict[str, object]],
+    embed: EmbeddingFunction,
+) -> list[dict[str, object]]:
+    """Rank canonical chunk text by cosine similarity to a query embedding."""
+    _validate_query(query)
+    if not chunks:
+        return []
+    texts = [canonical_ranking_text(chunk) for chunk in chunks]
+    vectors = _validate_embedding_vectors(embed([query, *texts]), len(chunks) + 1)
+    query_vector = vectors[0]
+    ranked = []
+    for chunk, vector in zip(chunks, vectors[1:]):
+        ranked.append({
+            "chunk_id": chunk["chunk_id"],
+            "dense_score": _cosine_similarity(query_vector, vector),
+        })
+    ranked.sort(key=lambda item: (-item["dense_score"], item["chunk_id"]))
+    for rank, item in enumerate(ranked, start=1):
+        item["dense_rank"] = rank
+    return ranked
+
+
+def rank_hybrid(
+    query: str,
+    chunks: list[dict[str, object]],
+    cwe_id: int,
+    programming_language: str,
+    embed: EmbeddingFunction,
+    rrf_k: int,
+    top_k: int,
+) -> list[dict[str, object]]:
+    """Apply the metadata gate, rank both channels, and attach provenance."""
+    eligible = filter_eligible_chunks(chunks, cwe_id, programming_language)
+    if not eligible:
+        return []
+    sparse = rank_bm25(query, eligible)
+    dense = rank_dense(query, eligible, embed)
+    fused = fuse_rankings(sparse, dense, rrf_k, top_k)
+    chunks_by_id = {chunk["chunk_id"]: chunk for chunk in eligible}
+    return [{**chunks_by_id[item["chunk_id"]], **item} for item in fused]
 
 
 def fuse_rankings(
@@ -150,6 +196,46 @@ def _validate_chunk(chunk: dict[str, object]) -> None:
 
 def _tokens(text: str) -> list[str]:
     return re.findall(r"[a-z0-9]+", text.casefold())
+
+
+def _validate_query(query: str) -> None:
+    if not isinstance(query, str) or not query.strip():
+        raise RetrievalError("query must be a non-empty string")
+
+
+def _validate_embedding_vectors(
+    vectors: Sequence[Sequence[object]],
+    expected_count: int,
+) -> list[list[float]]:
+    if not isinstance(vectors, list) or len(vectors) != expected_count:
+        raise RetrievalError("embedding response must contain one vector per input")
+    normalized: list[list[float]] = []
+    dimension: int | None = None
+    for vector in vectors:
+        if not isinstance(vector, list) or not vector:
+            raise RetrievalError("embedding vectors must be non-empty lists")
+        values = []
+        for value in vector:
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise RetrievalError("embedding values must be finite numbers")
+            number = float(value)
+            if not math.isfinite(number):
+                raise RetrievalError("embedding values must be finite numbers")
+            values.append(number)
+        if dimension is None:
+            dimension = len(values)
+        elif len(values) != dimension:
+            raise RetrievalError("embedding vectors must have the same dimension")
+        normalized.append(values)
+    return normalized
+
+
+def _cosine_similarity(first: list[float], second: list[float]) -> float:
+    first_norm = math.sqrt(sum(value * value for value in first))
+    second_norm = math.sqrt(sum(value * value for value in second))
+    if first_norm == 0 or second_norm == 0:
+        raise RetrievalError("embedding vectors must not have zero magnitude")
+    return sum(left * right for left, right in zip(first, second)) / (first_norm * second_norm)
 
 
 def _bm25_score(

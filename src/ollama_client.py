@@ -70,3 +70,36 @@ def generate(endpoint: str, model: str, prompt: str, timeout: int, tokens: int, 
     if not isinstance(decoded, dict) or not isinstance(decoded.get("response"), str):
         raise OllamaError("Ollama response field is missing")
     return decoded, raw
+
+
+def embed(
+    endpoint: str,
+    model: str,
+    inputs: list[str],
+    timeout: int,
+    keep_alive: str,
+) -> list[list[object]]:
+    """Return one unmodified embedding vector per supplied input."""
+    if not inputs or not all(isinstance(item, str) and item for item in inputs):
+        raise OllamaError("embedding inputs must be non-empty strings")
+    payload = {
+        "model": model,
+        "input": inputs,
+        "truncate": False,
+        "keep_alive": keep_alive,
+    }
+    request = urllib.request.Request(
+        f"{endpoint.rstrip('/')}/api/embed",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            decoded = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as error:
+        raise OllamaError(str(error)) from error
+    embeddings = decoded.get("embeddings") if isinstance(decoded, dict) else None
+    if not isinstance(embeddings, list) or not all(isinstance(vector, list) for vector in embeddings):
+        raise OllamaError("Ollama embedding response must contain a list of vectors")
+    return embeddings

@@ -11,6 +11,8 @@ from retrieval import (
     filter_eligible_chunks,
     fuse_rankings,
     rank_bm25,
+    rank_dense,
+    rank_hybrid,
     write_retrieval_records,
 )
 
@@ -81,6 +83,106 @@ def test_bm25_ranks_the_best_matching_eligible_chunk_first() -> None:
     assert [item["chunk_id"] for item in ranked] == ["chunk-archive", "chunk-filename"]
     assert [item["sparse_rank"] for item in ranked] == [1, 2]
     assert ranked[0]["sparse_score"] > ranked[1]["sparse_score"]
+
+
+def test_dense_ranking_uses_canonical_text_and_cosine_similarity() -> None:
+    archive = chunk("chunk-archive", ["Archive Handling"], "Validate archive entry names.")
+    filename = chunk("chunk-filename", ["Filename Safety"], "Allowlist filename characters.")
+    captured: list[list[str]] = []
+
+    def embed(inputs: list[str]) -> list[list[float]]:
+        captured.append(inputs)
+        return [[1.0, 0.0], [0.0, 1.0], [1.0, 0.0]]
+
+    ranked = rank_dense("archive extraction", [filename, archive], embed)
+
+    assert captured == [[
+        "archive extraction",
+        "Filename Safety\nAllowlist filename characters.",
+        "Archive Handling\nValidate archive entry names.",
+    ]]
+    assert [item["chunk_id"] for item in ranked] == ["chunk-archive", "chunk-filename"]
+    assert [item["dense_rank"] for item in ranked] == [1, 2]
+    assert ranked[0]["dense_score"] == 1.0
+    assert ranked[1]["dense_score"] == 0.0
+
+
+def test_dense_ranking_uses_chunk_id_for_equal_cosine_scores() -> None:
+    first = chunk("chunk-b", ["B"], "Second canonical text.")
+    second = chunk("chunk-a", ["A"], "First canonical text.")
+
+    ranked = rank_dense(
+        "query",
+        [first, second],
+        lambda inputs: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]],
+    )
+
+    assert [item["chunk_id"] for item in ranked] == ["chunk-a", "chunk-b"]
+
+
+def test_dense_ranking_rejects_malformed_embedding_vectors() -> None:
+    with pytest.raises(RetrievalError, match="same dimension"):
+        rank_dense(
+            "query",
+            [chunk("chunk-a", ["A"], "Text.")],
+            lambda inputs: [[1.0, 0.0], [1.0]],
+        )
+
+    with pytest.raises(RetrievalError, match="finite numbers"):
+        rank_dense(
+            "query",
+            [chunk("chunk-a", ["A"], "Text.")],
+            lambda inputs: [[1.0, 0.0], [float("nan"), 1.0]],
+        )
+
+
+def test_hybrid_ranking_filters_before_embedding_and_preserves_chunk_provenance() -> None:
+    eligible = chunk("chunk-eligible", ["Archive Handling"], "Validate archive entry names.")
+    ineligible = chunk("chunk-ineligible", ["Other"], "Other text.", cwe_ids=[79])
+    captured: list[list[str]] = []
+
+    def embed(inputs: list[str]) -> list[list[float]]:
+        captured.append(inputs)
+        return [[1.0, 0.0], [1.0, 0.0]]
+
+    ranked = rank_hybrid(
+        "archive extraction",
+        [ineligible, eligible],
+        cwe_id=22,
+        programming_language="Java",
+        embed=embed,
+        rrf_k=60,
+        top_k=3,
+    )
+
+    assert captured == [[
+        "archive extraction",
+        "Archive Handling\nValidate archive entry names.",
+    ]]
+    assert ranked == [{
+        **eligible,
+        "sparse_score": ranked[0]["sparse_score"],
+        "sparse_rank": 1,
+        "dense_score": 1.0,
+        "dense_rank": 1,
+        "rrf_score": 2 / 61,
+        "final_rank": 1,
+    }]
+
+
+def test_hybrid_ranking_does_not_embed_when_metadata_gate_is_empty() -> None:
+    def unexpected_embedding_call(inputs: list[str]) -> list[list[float]]:
+        raise AssertionError("embedding must not run without eligible chunks")
+
+    assert rank_hybrid(
+        "archive extraction",
+        [chunk("chunk-ineligible", ["Other"], "Other text.", cwe_ids=[79])],
+        cwe_id=22,
+        programming_language="Java",
+        embed=unexpected_embedding_call,
+        rrf_k=60,
+        top_k=3,
+    ) == []
 
 
 def test_rrf_uses_configured_k_and_chunk_id_tie_break() -> None:
