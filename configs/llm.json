@@ -1,8 +1,10 @@
 {
   "interface": "neutral-triage",
   "knowledge_slot_max_items": 3,
+  "neutral_contract": "../inventory/variant-contracts/neutral-triage-interface.json",
   "endpoint": "http://127.0.0.1:11434",
   "model": "qwen2.5-coder:7b-instruct-q4_K_M",
+  "model_digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
   "schema": "../schemas/verdict.json",
   "temperature": 0,
   "timeout_seconds": 120,

@@ -9,7 +9,7 @@ from evaluate import score
 from retrieval_evaluate import EvaluationError, run as run_retrieval_evaluation
 from sarif import normalize, read as read_findings, write as write_findings
 from scan import ScanError, run as run_scan
-from triage import TriageError, run as run_triage
+from triage import TriageError, run_paired, validate_paired_config
 from units import load as load_units, write as write_units
 
 
@@ -53,6 +53,8 @@ def main(argv: list[str] | None = None) -> int:
     triage.add_argument("--prompt", type=Path, required=True)
     triage.add_argument("--config", type=Path, required=True)
     triage.add_argument("--run", type=Path, required=True)
+    triage.add_argument("--variant", choices=("B", "C"), default="B")
+    triage.add_argument("--retrieval-contract", type=Path)
 
     corpus = commands.add_parser("corpus")
     corpus.add_argument("--sources", type=Path, required=True)
@@ -93,7 +95,15 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "retrieval":
             result = run_retrieval_evaluation(args.protocol, args.run)
         else:
-            result = run_triage(args.findings, args.contexts, args.prompt, args.config, args.run)
+            if args.variant == "B" and args.retrieval_contract is not None:
+                raise TriageError("B does not accept a retrieval contract")
+            if args.variant == "C" and args.retrieval_contract is None:
+                raise TriageError("C requires --retrieval-contract")
+            validate_paired_config(args.config)
+            result = run_paired(
+                args.findings, args.contexts, args.prompt, args.config, args.run,
+                args.variant, retrieval_contract_path=args.retrieval_contract,
+            )
     except (CorpusError, EvaluationError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
         print(f"ERROR={error}", file=sys.stderr)
         return 1
