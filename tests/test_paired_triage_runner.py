@@ -92,7 +92,7 @@ def test_runner_returns_uncertain_on_ollama_transport_failure(tmp_path: Path, mo
     config_data["model_digest"] = "digest"
     config.write_text(json.dumps(config_data), encoding="utf-8")
     monkeypatch.setattr("triage.generate", lambda *args: (_ for _ in ()).throw(OllamaError("offline")))
-    monkeypatch.setattr("triage.metadata", lambda *args: {})
+    monkeypatch.setattr("triage.metadata", lambda *args: {"model_digest": "digest"})
 
     run_paired(findings, contexts, prompt, config, tmp_path / "run", "B", None)
 
