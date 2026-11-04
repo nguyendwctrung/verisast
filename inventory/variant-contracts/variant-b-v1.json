@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "contract_id": "variant-b-v1",
+  "status": "frozen_development_contract",
+  "purpose": "Freeze the non-retrieval inputs that Variant C must reuse.",
+  "scope": {
+    "cohort": "owasp-smoke-codeql-a-dev-20261023-134357",
+    "evidence_class": "development_only",
+    "not_evidence_for": [
+      "held_out_quality",
+      "benchmark_results",
+      "variant_c_readiness"
+    ]
+  },
+  "pipeline_revision": {
+    "git_commit": "7f0606153ceeb78aaebac2f023ad01a6a2f93304",
+    "triage_implementation": {
+      "path": "src/triage.py",
+      "sha256": "1a62437ab57c0b8cb3c4c45e1e90233eb7f0282e5038cd88ed0fd572991b9999"
+    },
+    "verdict_validator": {
+      "path": "src/verdict.py",
+      "sha256": "6172d1f404853b7416e87f9604cb4428d075b498bfe8bf6340167b425dc00b1f"
+    }
+  },
+  "candidate_set": {
+    "scanner": "codeql",
+    "source_revision": "8b67a88d73b2594570fc21150705283de884620b",
+    "query_pack": "codeql/java-queries",
+    "query_suite": "codeql/java-queries:codeql-suites/java-security-extended.qls",
+    "finding_count": 13,
+    "path": "artifacts/codeql/owasp-smoke-codeql-a-dev-20261023-134357/normalized/findings.jsonl",
+    "sha256": "752117ac630cedb858abdf01c5324bf9a778e5af36ba725de7f2d19c99a978ef"
+  },
+  "source_context": {
+    "path": "artifacts/codeql/owasp-smoke-codeql-a-dev-20261023-134357/context/contexts.jsonl",
+    "sha256": "6536bc9bb11e18890f83623a44647ab3ebc452d5095266d9ddca32b1eec12f92",
+    "record_count": 13,
+    "contract": "bounded source/flow lines, detected guards, and static action_blocks_sink facts"
+  },
+  "prompt": {
+    "path": "prompts/triage.txt",
+    "sha256": "4adb9f9571c3b1401b9a7793848f0adec2fb9cbc252b379d8fa1ebd129e04913",
+    "knowledge_mode": "empty_list_only",
+    "rendered_retrieved_knowledge": "[]"
+  },
+  "output_schema": {
+    "path": "schemas/verdict.json",
+    "sha256": "e8f29166a37fbc9666cbf2c8fc8dead3f7f8831ff85af5609ee985afcce39c9b",
+    "schema_id": "verdict-v6"
+  },
+  "inference_configuration": {
+    "path": "configs/llm.json",
+    "sha256": "96e6c8138ea41785a080c3a0017c260f8056eadb6eb7ac73ea890c0d6d13ab21",
+    "variant": "B",
+    "endpoint": "http://127.0.0.1:11434",
+    "temperature": 0,
+    "timeout_seconds": 120,
+    "max_response_tokens": 512,
+    "context_tokens": 3072,
+    "keep_alive": "10m",
+    "server_environment": {
+      "OLLAMA_NUM_PARALLEL": "1",
+      "OLLAMA_CONTEXT_LENGTH": "3072",
+      "OLLAMA_FLASH_ATTENTION": "1",
+      "OLLAMA_KV_CACHE_TYPE": "q8_0",
+      "LLAMA_ARG_FIT_TARGET": "512"
+    }
+  },
+  "local_llm_identity": {
+    "model_name": "qwen2.5-coder:7b-instruct-q4_K_M",
+    "exact_local_digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+    "ollama_version": "0.40.8",
+    "identity_evidence": {
+      "path": "artifacts/llm/owasp-smoke-llm-b-dev-20261023-134357/manifest.json",
+      "created_at": "2026-10-23T06:47:50.559482+00:00"
+    },
+    "execution_requirement": "Before any new B or C run, query the local Ollama metadata endpoint and fail the run unless its exact digest equals this value; record the observed Ollama version and model metadata in the new run manifest."
+  },
+  "verdict_policy": {
+    "allowed_reported_verdicts": [
+      "TRUE_POSITIVE",
+      "FALSE_POSITIVE",
+      "UNCERTAIN"
+    ],
+    "false_positive_requirement": "A FALSE_POSITIVE requires a validated effective barrier.",
+    "true_positive_requirement": "A TRUE_POSITIVE is rejected when a validated effective barrier exists.",
+    "evidence_requirement": "Citations must reference supplied context line IDs; every detected guard requires exactly one consistent assessment.",
+    "failure_result": "Malformed JSON, schema violations, missing or invalid citations, contradictory guard evidence, invalid knowledge IDs, missing context, and Ollama transport failures yield UNCERTAIN.",
+    "knowledge_validation": "Variant B permits no knowledge IDs; its schema is bound to knowledge_used.maxItems=0."
+  },
+  "invariance_requirement": "Variant C must preserve every field in this contract and may differ only by a separately validated, attributable retrieved_knowledge bundle."
+}
