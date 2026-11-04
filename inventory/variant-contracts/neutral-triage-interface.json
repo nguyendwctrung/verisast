@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "contract_id": "neutral-triage-interface",
+  "status": "frozen_for_paired_b_c_development",
+  "decision": "B-v1 remains historical development evidence. All future paired B/C development and reportable experiments use this neutral interface.",
+  "shared_inputs": {
+    "prompt_path": "prompts/triage.txt",
+    "schema_path": "schemas/verdict.json",
+    "config_path": "configs/llm.json",
+    "validator_path": "src/verdict.py",
+    "candidate_and_context_requirement": "B and C must use byte-identical frozen findings and contexts from the same source revision."
+  },
+  "knowledge_slot": {
+    "placeholder": "{retrieved_knowledge}",
+    "maximum_items": 3,
+    "b_value": [],
+    "c_value": "validated attributable bundle under variant-c-retrieval-bundle-v1",
+    "knowledge_id_rule": "Only supplied chunk_id values may appear in knowledge_used. An empty supplied ID set permits only []."
+  },
+  "invariance": {
+    "same_between_b_and_c": [
+      "candidate set",
+      "source context",
+      "prompt template",
+      "output schema base",
+      "validator",
+      "Qwen model digest",
+      "inference settings",
+      "verdict policy"
+    ],
+    "only_permitted_difference": "rendered retrieved_knowledge slot and the corresponding allowed knowledge ID set"
+  },
+  "failure_policy": "A retrieval, rendering, model-identity, schema-binding, or provenance failure records error evidence and yields UNCERTAIN. It must not silently fall back from C to B.",
+  "limitations": [
+    "This contract does not authorize a Variant C run or a benchmark result.",
+    "Development evidence must not be reported as held-out performance."
+  ]
+}

@@ -1,5 +1,6 @@
 {
-  "variant": "B",
+  "interface": "neutral-triage",
+  "knowledge_slot_max_items": 3,
   "endpoint": "http://127.0.0.1:11434",
   "model": "qwen2.5-coder:7b-instruct-q4_K_M",
   "schema": "../schemas/verdict.json",

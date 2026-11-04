@@ -39,7 +39,7 @@
     "contract": "bounded source/flow lines, detected guards, and static action_blocks_sink facts"
   },
   "prompt": {
-    "path": "prompts/triage.txt",
+    "path": "inventory/variant-contracts/archive/2026-11-04-neutral-interface/triage.txt",
     "sha256": "4adb9f9571c3b1401b9a7793848f0adec2fb9cbc252b379d8fa1ebd129e04913",
     "knowledge_mode": "empty_list_only",
     "rendered_retrieved_knowledge": "[]"
@@ -50,7 +50,7 @@
     "schema_id": "verdict-v6"
   },
   "inference_configuration": {
-    "path": "configs/llm.json",
+    "path": "inventory/variant-contracts/archive/2026-11-04-neutral-interface/llm.json",
     "sha256": "96e6c8138ea41785a080c3a0017c260f8056eadb6eb7ac73ea890c0d6d13ab21",
     "variant": "B",
     "endpoint": "http://127.0.0.1:11434",
