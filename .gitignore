@@ -35,3 +35,6 @@ artifacts/
 .pytest-*/
 
 /inventory/*/provenance/downloaded-html/
+
+# Historical local copies retained for provenance but not versioned as inputs.
+/inventory/variant-contracts/archive/
