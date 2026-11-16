@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "contract_id": "variant-c-retrieval-bundle-v2",
+  "status": "frozen_integration_specification",
+  "purpose": "Define the only additional input permitted in Variant C relative to Variant B for generic Java path injection.",
+  "base_contract": "inventory/variant-contracts/variant-b-v1.json",
+  "allowed_difference": "Variant C may add one validated retrieved_knowledge bundle to the Variant B request. It must not change candidates, source context, prompt core, output schema, validator, local LLM identity, inference settings, or verdict policy.",
+  "allowed_query_ids": [
+    "java/path-injection"
+  ],
+  "admitted_retrieval": {
+    "corpus_id": "corpus-v2-cc6c2b98fa056ec8",
+    "corpus_manifest_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/manifest.json",
+    "chunks_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/chunks.jsonl",
+    "chunks_sha256": "5944b7b5e66e64a25514de56803303fded14589caf7b767eb986a616fc7cbb3e",
+    "documents_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/documents.jsonl",
+    "documents_sha256": "ee44386d7b1e983bebc96a6169f6bfb483672cd7df41297d5972f204c46a05e6",
+    "embedding_model_name": "bge-m3:latest",
+    "embedding_model_digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+    "embedding_dimension": 1024,
+    "runtime_evidence_path": "artifacts/retrieval-runtime/bge-m3-runtime-20261029T074309Z/model-provenance.json"
+  },
+  "metadata_filter": {
+    "cwe_id": 22,
+    "programming_language": "Java"
+  },
+  "ranking": {
+    "canonical_text": "section_path joined by ' > ' followed by newline and text",
+    "sparse": "BM25",
+    "dense": "cosine_similarity",
+    "fusion": "reciprocal_rank_fusion",
+    "rrf_k": 60,
+    "top_k": 3,
+    "tie_break": "chunk_id_ascending"
+  },
+  "record_contract": {
+    "retrieval_schema_version": 1,
+    "required_record_fields": [
+      "status",
+      "corpus_id",
+      "embedding_model_name",
+      "embedding_model_digest",
+      "metadata_filter",
+      "query",
+      "query_sha256",
+      "retrieval_config_sha256",
+      "results"
+    ],
+    "required_result_fields": [
+      "final_rank",
+      "chunk_id",
+      "document_id",
+      "source_id",
+      "section_path",
+      "content_sha256",
+      "raw_source_sha256",
+      "sparse_rank",
+      "sparse_score",
+      "dense_rank",
+      "dense_score",
+      "rrf_score"
+    ],
+    "status_requirement": "passed",
+    "result_order_requirement": "ascending final_rank; no duplicate chunk_id; at most top_k results"
+  },
+  "retrieved_knowledge_bundle": {
+    "request_field": "retrieved_knowledge",
+    "empty_bundle_is_not_permitted": "A retrieval error or an invalid, empty, or mismatched bundle must not be treated as successful Variant C input; record the error and produce UNCERTAIN.",
+    "record_level_fields": [
+      "candidate_id",
+      "query",
+      "query_sha256",
+      "retrieval_record_sha256",
+      "retrieval_config_sha256",
+      "corpus_id",
+      "embedding_model_digest"
+    ],
+    "knowledge_item_fields": [
+      "knowledge_id",
+      "final_rank",
+      "chunk_id",
+      "document_id",
+      "source_id",
+      "section_path",
+      "content_sha256",
+      "raw_source_sha256",
+      "canonical_text",
+      "sparse_rank",
+      "sparse_score",
+      "dense_rank",
+      "dense_score",
+      "rrf_score"
+    ],
+    "knowledge_id_rule": "knowledge_id equals chunk_id and is the only value permitted in a verdict knowledge_used entry.",
+    "canonical_text_rule": "canonical_text must be reconstructed from the verified frozen chunk as section_path joined by ' > ', a newline, then text; its content_sha256 must equal the record and frozen chunk value.",
+    "attribution_rule": "Every knowledge item must preserve all listed immutable identifiers and ranking values from its retrieval record."
+  },
+  "query_construction_requirement": "The retrieval query must be deterministically derived only from the frozen candidate and frozen source context. Its text, SHA-256, construction-function identity, and construction inputs must be recorded. It may not use ground truth, labels, patches, advisories, vulnerable/fixed status, or target-specific answer material.",
+  "validation_requirements": [
+    "Reject a candidate whose CodeQL rule_id is not in allowed_query_ids.",
+    "Verify the frozen corpus file hashes before resolving chunks.",
+    "Reject a record unless corpus ID, metadata filter, embedding model name, and exact embedding digest equal this contract.",
+    "Reject a record unless every result resolves to exactly one frozen chunk with matching immutable identifiers and hashes.",
+    "Reject a bundle unless its candidate_id belongs to the frozen Variant B candidate set and its retrieval query was derived only from that candidate and its frozen context.",
+    "Reject duplicate knowledge IDs, out-of-order ranks, ranks outside top_k, and non-finite scores.",
+    "Reject knowledge containing labels, patches, advisories, vulnerable/fixed status, or target-specific answer material."
+  ],
+  "failure_policy": "Any retrieval transport failure, empty response, provenance mismatch, malformed record, invalid chunk projection, forbidden knowledge content, or validation failure must be retained as error evidence and yield UNCERTAIN. It must not create, remove, or alter a CodeQL candidate or its source context."
+}

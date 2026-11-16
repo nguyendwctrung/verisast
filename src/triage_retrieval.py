@@ -31,6 +31,7 @@ def build_provider(
     eligible = filter_eligible_chunks(chunks, int(contract["metadata_filter"]["cwe_id"]), str(contract["metadata_filter"]["programming_language"]))
 
     def provider(finding: dict[str, object], context: dict[str, object]) -> dict[str, object]:
+        validate_query_id(contract, finding)
         query = deterministic_query(finding, context)
         ranking = contract["ranking"]
         results = rank_hybrid(
@@ -44,6 +45,20 @@ def build_provider(
         )
         return validate_retrieval_bundle(contract, finding, context, record, chunks)
     return provider
+
+
+def validate_query_id(contract: dict[str, object], finding: dict[str, object]) -> None:
+    """Apply an optional contract-level CodeQL query identity gate."""
+    allowed = contract.get("allowed_query_ids")
+    if allowed is None:
+        return
+    if not isinstance(allowed, list) or not allowed or not all(
+        isinstance(item, str) and item.strip() for item in allowed
+    ):
+        raise TriageRetrievalError("allowed_query_ids must be a non-empty string list")
+    rule_id = finding.get("rule_id")
+    if not isinstance(rule_id, str) or rule_id not in allowed:
+        raise TriageRetrievalError("finding rule_id is not permitted by the retrieval contract")
 
 
 def deterministic_query(finding: dict[str, object], context: dict[str, object]) -> str:
