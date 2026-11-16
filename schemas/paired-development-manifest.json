@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "paired-development-input-manifest-v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "purpose", "source_revision", "intended_b_command", "inputs", "model"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "paired-development-input-manifest"},
+    "purpose": {"const": "development_only"},
+    "source_revision": {"type": "string", "minLength": 1},
+    "intended_b_command": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "inputs": {"type": "object"},
+    "model": {"type": "object"}
+  }
+}
