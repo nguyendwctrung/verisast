@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from corpus import CorpusError, extract_markdown_sections
+from corpus import CorpusError, extract_html_sections, extract_markdown_sections
 
 
 MARKDOWN = """\
@@ -113,3 +113,55 @@ def test_extraction_is_deterministic_and_does_not_mutate_raw_text() -> None:
 
     assert raw == MARKDOWN
     assert first == second
+
+
+HTML = """\
+<!doctype html>
+<html><body>
+  <h1>Path operations</h1>
+  <h2>Normalize a Path</h2>
+  <p>Normalize removes redundant name elements.</p>
+  <h3>Symbolic links</h3>
+  <p>Normalize alone does not resolve symbolic links.</p>
+  <h2>Convert a Path</h2>
+  <p>toRealPath resolves links on the file system.</p>
+</body></html>
+"""
+
+
+def test_extracts_html_heading_section_with_nested_content() -> None:
+    extracted = extract_html_sections(
+        HTML,
+        [section(["Normalize a Path"])],
+    )
+
+    assert extracted == [{
+        "section_path": ["Normalize a Path"],
+        "source_line_start": 4,
+        "source_line_end": 7,
+        "text": (
+            "## Normalize a Path\n"
+            "Normalize removes redundant name elements.\n"
+            "### Symbolic links\n"
+            "Normalize alone does not resolve symbolic links."
+        ),
+    }]
+
+
+def test_html_missing_or_ambiguous_heading_is_rejected() -> None:
+    with pytest.raises(CorpusError, match=r"section path not found: Missing"):
+        extract_html_sections(HTML, [section(["Missing"])])
+
+    ambiguous = "<h1>Guide</h1><h2>Validation</h2><p>A</p><h2>Validation</h2><p>B</p>"
+    with pytest.raises(CorpusError, match=r"section path is ambiguous: Validation"):
+        extract_html_sections(ambiguous, [section(["Validation"])])
+
+
+def test_html_extraction_is_deterministic() -> None:
+    selected = [section(["Normalize a Path"]), section(["Convert a Path"])]
+    assert extract_html_sections(HTML, selected) == extract_html_sections(HTML, selected)
+
+
+def test_html_with_unclosed_heading_is_rejected() -> None:
+    with pytest.raises(CorpusError, match="unclosed heading"):
+        extract_html_sections("<h1>Guide</h1><h2>Validation", [section(["Validation"])])

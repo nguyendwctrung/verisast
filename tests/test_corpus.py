@@ -157,6 +157,8 @@ def test_ingest_creates_stable_documents_chunks_and_manifest(tmp_path: Path) -> 
     assert document_a["document_version_id"] == document_b["document_version_id"]
     assert chunk_a["chunk_id"] == chunk_b["chunk_id"]
     assert document_a["text"] == "## Mitigations\nValidate a canonical path.\n\nReject paths outside the base."
+    assert document_a["normalizer_version"] == "corpus-v1-markdown-section"
+    assert chunk_a["chunker_version"] == "corpus-v1-markdown-section"
     assert source_a["raw_sha256"] == hashlib.sha256(source.read_bytes()).hexdigest()
     assert (output_a / source_a["raw_path"]).read_bytes() == source.read_bytes()
     assert document_a["source_locator"] == "section:mitigations"
@@ -324,3 +326,45 @@ def test_cli_corpus_dispatches_ingestion(tmp_path: Path) -> None:
 
     assert status == 0
     assert json.loads((output / "manifest.json").read_text(encoding="utf-8"))["status"] == "passed"
+
+
+def test_ingest_admits_html_source_with_explicit_format(tmp_path: Path) -> None:
+    source = tmp_path / "oracle.html"
+    source.write_text(
+        "<h1>Path operations</h1><h2>Normalize a Path</h2>"
+        "<p>Resolve under a trusted base.</p>",
+        encoding="utf-8",
+    )
+    record = source_record(source, "oracle")
+    record["source_format"] = "html"
+    record["corpus_version"] = 2
+    record["selected_sections"] = [{
+        "section_path": ["Normalize a Path"],
+        "cwe_ids": [22],
+        "query_ids": ["java/path-injection"],
+        "programming_languages": ["Java"],
+    }]
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus-v2", {"target_identifiers": []})
+
+    document = read_jsonl(tmp_path / "corpus-v2" / "documents.jsonl")[0]
+    assert result["corpus_id"].startswith("corpus-v2-")
+    assert document["extractor_version"] == "html-heading-sections-v1"
+    assert document["text"] == "## Normalize a Path\nResolve under a trusted base."
+
+
+def test_invalid_source_format_is_quarantined(tmp_path: Path) -> None:
+    source = tmp_path / "guidance.md"
+    source.write_text(markdown_section("Use a canonical path."), encoding="utf-8")
+    record = source_record(source)
+    record["source_format"] = "xml"
+    manifest = tmp_path / "sources.jsonl"
+    write_manifest(manifest, [record])
+
+    result = ingest(manifest, tmp_path / "corpus", {"target_identifiers": []})
+
+    quarantine = read_jsonl(tmp_path / "corpus" / "quarantined.jsonl")
+    assert result["status"] == "failed"
+    assert "source_format" in quarantine[0]["invalid_fields"]

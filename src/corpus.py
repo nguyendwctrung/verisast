@@ -3,6 +3,7 @@ import json
 import re
 import shutil
 from datetime import datetime
+from html.parser import HTMLParser
 from pathlib import Path
 
 
@@ -23,6 +24,7 @@ REQUIRED_SECTION_FIELDS = (
 
 EXTRACTOR_VERSION = "markdown-atx-sections-v1"
 CHUNKER_VERSION = "corpus-v1-markdown-section"
+HTML_EXTRACTOR_VERSION = "html-heading-sections-v1"
 
 DEFAULT_PROHIBITED_MARKERS = (
     "advisory", "benchmark label", "ground truth", "patch", "vulnerable revision",
@@ -64,6 +66,155 @@ def extract_markdown_sections(
             "text": "\n".join(lines[start - 1:end]).rstrip(),
         })
     return extracted
+
+
+class _HtmlHeadingParser(HTMLParser):
+    """Collect heading and visible-text events without rewriting raw HTML."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.events: list[dict[str, object]] = []
+        self._heading_level: int | None = None
+        self._heading_tag: str | None = None
+        self._heading_line: int | None = None
+        self._heading_parts: list[str] = []
+        self._ignored_depth = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        lowered = tag.casefold()
+        if lowered in {"script", "style"}:
+            self._ignored_depth += 1
+            return
+        attributes = {name.casefold(): value for name, value in attrs}
+        is_native_heading = re.fullmatch(r"h[1-6]", lowered) is not None
+        is_mitre_heading = lowered == "div" and "heading" in (attributes.get("class") or "").split()
+        if is_native_heading or is_mitre_heading:
+            if self._heading_level is not None:
+                raise CorpusError("malformed HTML has nested heading tags")
+            self._heading_level = int(lowered[1]) if is_native_heading else 2
+            self._heading_tag = lowered
+            self._heading_line = self.getpos()[0]
+            self._heading_parts = []
+
+    def handle_endtag(self, tag: str) -> None:
+        lowered = tag.casefold()
+        if lowered in {"script", "style"}:
+            self._ignored_depth = max(0, self._ignored_depth - 1)
+            return
+        if lowered == self._heading_tag and self._heading_level is not None:
+            title = _html_text(" ".join(self._heading_parts))
+            if title:
+                self.events.append({
+                    "kind": "heading",
+                    "level": self._heading_level,
+                    "title": title,
+                    "source_line": self._heading_line,
+                })
+            self._heading_level = None
+            self._heading_tag = None
+            self._heading_line = None
+            self._heading_parts = []
+
+    def handle_data(self, data: str) -> None:
+        if self._ignored_depth:
+            return
+        text = _html_text(data)
+        if not text:
+            return
+        if self._heading_level is not None:
+            self._heading_parts.append(text)
+            return
+        self.events.append({"kind": "text", "text": text, "source_line": self.getpos()[0]})
+
+    def close(self) -> None:
+        super().close()
+        if self._heading_level is not None:
+            raise CorpusError("malformed HTML has an unclosed heading tag")
+
+
+def extract_html_sections(
+    raw_text: str,
+    selected_sections: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    """Extract pre-registered HTML heading sections in manifest order."""
+    if not isinstance(raw_text, str):
+        raise CorpusError("raw HTML text must be a string")
+    parser = _HtmlHeadingParser()
+    try:
+        parser.feed(raw_text)
+        parser.close()
+    except CorpusError:
+        raise
+    except Exception as error:
+        raise CorpusError(f"invalid HTML: {error}") from error
+    headings = _html_headings(parser.events)
+    extracted = []
+    for section in selected_sections:
+        path = _section_path(section)
+        matches = [heading for heading in headings if heading["section_path"] == path]
+        label = " > ".join(path)
+        if not matches:
+            raise CorpusError(f"section path not found: {label}")
+        if len(matches) > 1:
+            raise CorpusError(f"section path is ambiguous: {label}")
+        heading = matches[0]
+        end = _html_section_end(headings, heading, len(parser.events))
+        events = parser.events[int(heading["event_index"]):end]
+        lines = []
+        for event in events:
+            if event["kind"] == "heading":
+                lines.append(f"{'#' * int(event['level'])} {event['title']}")
+            else:
+                lines.append(str(event["text"]))
+        text = "\n".join(lines).strip()
+        if not text:
+            raise CorpusError(f"section path is empty: {label}")
+        end_line = max(int(event["source_line"]) for event in events)
+        extracted.append({
+            "section_path": path,
+            "source_line_start": heading["source_line_start"],
+            "source_line_end": end_line,
+            "text": text,
+        })
+    return extracted
+
+
+def _html_text(value: str) -> str:
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def _html_headings(events: list[dict[str, object]]) -> list[dict[str, object]]:
+    headings = []
+    ancestry: list[tuple[int, str]] = []
+    for index, event in enumerate(events):
+        if event["kind"] != "heading":
+            continue
+        level = int(event["level"])
+        title = str(event["title"])
+        ancestry = [item for item in ancestry if item[0] < level]
+        ancestry.append((level, title))
+        headings.append({
+            "level": level,
+            "section_path": [item[1] for item in ancestry if item[0] != 1],
+            "source_line_start": int(event["source_line"]),
+            "event_index": index,
+        })
+    return headings
+
+
+def _html_section_end(
+    headings: list[dict[str, object]],
+    selected: dict[str, object],
+    event_count: int,
+) -> int:
+    selected_index = int(selected["event_index"])
+    selected_level = int(selected["level"])
+    for heading in headings:
+        if int(heading["event_index"]) <= selected_index:
+            continue
+        if int(heading["level"]) <= selected_level:
+            return int(heading["event_index"])
+    return event_count
 
 
 def _markdown_headings(lines: list[str]) -> list[dict[str, object]]:
@@ -118,6 +269,7 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
     records = _read_jsonl(sources_path)
     if not records:
         raise CorpusError("sources manifest is empty")
+    corpus_version = _corpus_version(records)
     identifiers = _identifiers(audit_scope)
     output.mkdir(parents=True)
     raw = output / "raw"
@@ -186,11 +338,12 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
             "license_snapshot_reference": f"licenses/{license_name}",
             "license_snapshot_sha256": _hash(copied_license.read_bytes()),
             "selection_reason": record["selection_reason"],
+            "source_format": record.get("source_format", "markdown"),
             "raw_path": f"raw/{raw_name}",
             "raw_sha256": raw_sha256,
         }
         try:
-            extracted_sections = extract_markdown_sections(raw_text, record["selected_sections"])
+            extracted_sections, extractor_version = _extract_sections(raw_text, record)
         except CorpusError as error:
             quarantined.append(_section_quarantine(source_id, error))
             continue
@@ -214,7 +367,9 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
             continue
         accepted_sources.append(source_row)
         for section, extracted, text in selected:
-            document = _document(record, source_row, section, extracted, text)
+            document = _document(
+                record, source_row, section, extracted, text, corpus_version, extractor_version,
+            )
             documents.append(document)
             chunks.append(_chunk(document))
 
@@ -237,9 +392,9 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
     manifest = {
         "schema_version": 1,
         "status": status,
-        "normalizer_version": "corpus-v1-markdown-section",
-        "extractor_version": EXTRACTOR_VERSION,
-        "chunker_version": CHUNKER_VERSION,
+        "normalizer_version": _normalizer_version(corpus_version),
+        "extractor_version": _manifest_extractor_version(records),
+        "chunker_version": _chunker_version(corpus_version),
         "audit_scope_sha256": _canonical_hash(audit_scope),
         "source_manifest_sha256": _hash(sources_path.read_bytes()),
         "sources_sha256": _hash((output / "sources.jsonl").read_bytes()),
@@ -249,9 +404,57 @@ def ingest(sources_path: Path, output: Path, audit_scope: dict[str, object]) -> 
         "quarantined_sha256": _hash((output / "quarantined.jsonl").read_bytes()),
         "counts": {"sources": len(accepted_sources), "documents": len(documents), "chunks": len(chunks)},
     }
-    manifest["corpus_id"] = f"corpus-v1-{_canonical_hash(manifest)[:16]}"
+    manifest["corpus_id"] = f"corpus-v{corpus_version}-{_canonical_hash(manifest)[:16]}"
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return {"corpus_id": manifest["corpus_id"], "status": status, "output": str(output), **manifest["counts"]}
+
+
+def _corpus_version(records: list[object]) -> int:
+    versions = {
+        record.get("corpus_version", 1)
+        for record in records
+        if isinstance(record, dict)
+    }
+    if len(versions) != 1:
+        raise CorpusError("source manifest records must use one corpus_version")
+    version = next(iter(versions))
+    if isinstance(version, bool) or not isinstance(version, int) or version < 1:
+        raise CorpusError("corpus_version must be a positive integer")
+    return version
+
+
+def _manifest_extractor_version(records: list[object]) -> str:
+    formats = {record.get("source_format", "markdown") for record in records if isinstance(record, dict)}
+    versions = []
+    if "markdown" in formats:
+        versions.append(EXTRACTOR_VERSION)
+    if "html" in formats:
+        versions.append(HTML_EXTRACTOR_VERSION)
+    return "+".join(versions)
+
+
+def _normalizer_version(corpus_version: int) -> str:
+    if corpus_version == 1:
+        return "corpus-v1-markdown-section"
+    return f"corpus-v{corpus_version}-section"
+
+
+def _chunker_version(corpus_version: int) -> str:
+    if corpus_version == 1:
+        return CHUNKER_VERSION
+    return f"corpus-v{corpus_version}-section"
+
+
+def _extract_sections(
+    raw_text: str,
+    record: dict[str, object],
+) -> tuple[list[dict[str, object]], str]:
+    source_format = record.get("source_format", "markdown")
+    if source_format == "markdown":
+        return extract_markdown_sections(raw_text, record["selected_sections"]), EXTRACTOR_VERSION
+    if source_format == "html":
+        return extract_html_sections(raw_text, record["selected_sections"]), HTML_EXTRACTOR_VERSION
+    raise CorpusError(f"unsupported source_format: {source_format}")
 
 
 def _read_jsonl(path: Path) -> list[object]:
@@ -316,6 +519,12 @@ def _invalid_fields(record: dict[str, object], manifest: Path) -> list[str]:
     sections = record.get("selected_sections")
     if sections not in (None, "", []) and not _valid_sections(sections):
         invalid.append("selected_sections")
+    source_format = record.get("source_format", "markdown")
+    if source_format not in {"markdown", "html"}:
+        invalid.append("source_format")
+    corpus_version = record.get("corpus_version", 1)
+    if isinstance(corpus_version, bool) or not isinstance(corpus_version, int) or corpus_version < 1:
+        invalid.append("corpus_version")
     return invalid
 
 
@@ -402,6 +611,8 @@ def _document(
     section: dict[str, object],
     extracted: dict[str, object],
     text: str,
+    corpus_version: int,
+    extractor_version: str,
 ) -> dict[str, object]:
     section_path = extracted["section_path"]
     content_sha256 = _hash(text.encode("utf-8"))
@@ -410,9 +621,9 @@ def _document(
         "source_revision_or_release": source["source_revision_or_release"],
         "section_path": section_path,
     }
-    document_id = f"document-v1:{_canonical_hash(identity_seed)}"
-    version_seed = {**identity_seed, "content_sha256": content_sha256, "extractor_version": EXTRACTOR_VERSION}
-    document_version_id = f"document-v1:{_canonical_hash(version_seed)}"
+    document_id = f"document-v{corpus_version}:{_canonical_hash(identity_seed)}"
+    version_seed = {**identity_seed, "content_sha256": content_sha256, "extractor_version": extractor_version}
+    document_version_id = f"document-v{corpus_version}:{_canonical_hash(version_seed)}"
     return {
         "document_schema_version": 1,
         "document_id": document_id,
@@ -432,8 +643,8 @@ def _document(
         "query_ids": section["query_ids"],
         "technology_or_framework": section.get("technology_or_framework", []),
         "selection_reason": source["selection_reason"],
-        "normalizer_version": "corpus-v1-markdown-section",
-        "extractor_version": EXTRACTOR_VERSION,
+        "normalizer_version": _normalizer_version(corpus_version),
+        "extractor_version": extractor_version,
         "leakage_status": "accepted",
         "audit_reference": "leakage-audit.json",
         "source": source,
@@ -441,10 +652,12 @@ def _document(
 
 
 def _chunk(document: dict[str, object]) -> dict[str, object]:
-    seed = {"document_version_id": document["document_version_id"], "section_path": document["section_path"], "content_sha256": document["content_sha256"], "chunker_version": CHUNKER_VERSION}
+    corpus_version = int(str(document["document_id"]).split(":", maxsplit=1)[0].removeprefix("document-v"))
+    chunker_version = _chunker_version(corpus_version)
+    seed = {"document_version_id": document["document_version_id"], "section_path": document["section_path"], "content_sha256": document["content_sha256"], "chunker_version": chunker_version}
     return {
         "chunk_schema_version": 1,
-        "chunk_id": f"chunk-v1:{_canonical_hash(seed)}",
+        "chunk_id": f"chunk-v{corpus_version}:{_canonical_hash(seed)}",
         "document_id": document["document_id"],
         "document_version_id": document["document_version_id"],
         "section_path": document["section_path"],
@@ -455,7 +668,7 @@ def _chunk(document: dict[str, object]) -> dict[str, object]:
         "source_line_start": document["source_line_start"],
         "source_line_end": document["source_line_end"],
         "extractor_version": document["extractor_version"],
-        "chunker_version": CHUNKER_VERSION,
+        "chunker_version": chunker_version,
         "source_id": document["source_id"],
         "license_id": document["source"]["license_id"],
     }
