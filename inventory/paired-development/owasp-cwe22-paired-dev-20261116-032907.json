@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "kind": "paired-development-input-manifest",
+  "purpose": "development_only",
+  "source_revision": "8b67a88d73b2594570fc21150705283de884620b",
+  "intended_b_command": [
+    "python",
+    "-m",
+    "main",
+    "triage",
+    "--variant",
+    "B",
+    "--findings",
+    "D:\\UIT\\KLTN\\verisast\\artifacts\\codeql\\owasp-cwe22-paired-dev-20261116-032907\\normalized\\findings.jsonl",
+    "--contexts",
+    "D:\\UIT\\KLTN\\verisast\\artifacts\\codeql\\owasp-cwe22-paired-dev-20261116-032907\\context\\contexts.jsonl",
+    "--prompt",
+    "D:\\UIT\\KLTN\\verisast\\prompts\\triage.txt",
+    "--config",
+    "D:\\UIT\\KLTN\\verisast\\configs\\llm.json",
+    "--paired-manifest",
+    "D:\\UIT\\KLTN\\verisast\\inventory\\paired-development\\owasp-cwe22-paired-dev-20261116-032907.json",
+    "--run",
+    "D:\\UIT\\KLTN\\verisast\\artifacts\\llm\\owasp-cwe22-paired-dev-20261116-032907-b"
+  ],
+  "inputs": {
+    "findings": {
+      "path": "D:\\UIT\\KLTN\\verisast\\artifacts\\codeql\\owasp-cwe22-paired-dev-20261116-032907\\normalized\\findings.jsonl",
+      "sha256": "89cc9d4869262da9726b0ec82f439df11412a690e7d4567915c9fa1a0321e5d2"
+    },
+    "contexts": {
+      "path": "D:\\UIT\\KLTN\\verisast\\artifacts\\codeql\\owasp-cwe22-paired-dev-20261116-032907\\context\\contexts.jsonl",
+      "sha256": "7498c9fea02c9a963bdfa92dc3ad838ecb1f88457a4cf009f5eee6293e9d55e4"
+    },
+    "prompt": {
+      "path": "D:\\UIT\\KLTN\\verisast\\prompts\\triage.txt",
+      "sha256": "b3c5035bd7bb2188cee74fcfce1de189c2d5fb825a568bcdce41f6c9a6ee0180"
+    },
+    "schema": {
+      "path": "D:\\UIT\\KLTN\\verisast\\schemas\\verdict.json",
+      "sha256": "e8f29166a37fbc9666cbf2c8fc8dead3f7f8831ff85af5609ee985afcce39c9b"
+    },
+    "config": {
+      "path": "D:\\UIT\\KLTN\\verisast\\configs\\llm.json",
+      "sha256": "4f4db7cabc4a4a808cbcb8162f0d883886937f3ee16759d23938564530ab7d81"
+    },
+    "neutral_contract": {
+      "path": "D:\\UIT\\KLTN\\verisast\\inventory\\variant-contracts\\neutral-triage-interface.json",
+      "sha256": "45ed1be2c06138e38f3ec3d0c97792cee83e51ad1982c4af46e4f793eee360da"
+    }
+  },
+  "model": {
+    "name": "qwen2.5-coder:7b-instruct-q4_K_M",
+    "digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364"
+  }
+}
