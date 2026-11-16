@@ -3,14 +3,23 @@ import json
 import sys
 from pathlib import Path
 
+from context import build as build_context
+from context import write as write_context
 from corpus import CorpusError, ingest
-from context import build as build_context, write as write_context
 from evaluate import score
-from retrieval_evaluate import EvaluationError, run as run_retrieval_evaluation
-from sarif import normalize, read as read_findings, write as write_findings
-from scan import ScanError, run as run_scan
+from paired_manifest import PairedManifestError
+from paired_manifest import create as create_paired_manifest
+from paired_manifest import validate as validate_paired_manifest
+from retrieval_evaluate import EvaluationError
+from retrieval_evaluate import run as run_retrieval_evaluation
+from sarif import normalize
+from sarif import read as read_findings
+from sarif import write as write_findings
+from scan import ScanError
+from scan import run as run_scan
 from triage import TriageError, run_paired, validate_paired_config
-from units import load as load_units, write as write_units
+from units import load as load_units
+from units import write as write_units
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -55,6 +64,24 @@ def main(argv: list[str] | None = None) -> int:
     triage.add_argument("--run", type=Path, required=True)
     triage.add_argument("--variant", choices=("B", "C"), default="B")
     triage.add_argument("--retrieval-contract", type=Path)
+    triage.add_argument("--paired-manifest", type=Path, required=True)
+
+    paired_manifest = commands.add_parser("paired-manifest")
+    paired_manifest_commands = paired_manifest.add_subparsers(dest="paired_manifest_command", required=True)
+    paired_create = paired_manifest_commands.add_parser("create")
+    paired_create.add_argument("--findings", type=Path, required=True)
+    paired_create.add_argument("--contexts", type=Path, required=True)
+    paired_create.add_argument("--prompt", type=Path, required=True)
+    paired_create.add_argument("--config", type=Path, required=True)
+    paired_create.add_argument("--source-revision", required=True)
+    paired_create.add_argument("--output", type=Path, required=True)
+    paired_create.add_argument("--b-command", nargs="+", required=True)
+    paired_validate = paired_manifest_commands.add_parser("validate")
+    paired_validate.add_argument("--manifest", type=Path, required=True)
+    paired_validate.add_argument("--findings", type=Path, required=True)
+    paired_validate.add_argument("--contexts", type=Path, required=True)
+    paired_validate.add_argument("--prompt", type=Path, required=True)
+    paired_validate.add_argument("--config", type=Path, required=True)
 
     corpus = commands.add_parser("corpus")
     corpus.add_argument("--sources", type=Path, required=True)
@@ -94,17 +121,31 @@ def main(argv: list[str] | None = None) -> int:
             result = ingest(args.sources, args.output, audit_scope)
         elif args.command == "retrieval":
             result = run_retrieval_evaluation(args.protocol, args.run)
+        elif args.command == "paired-manifest":
+            if args.paired_manifest_command == "create":
+                result = create_paired_manifest(
+                    args.findings, args.contexts, args.prompt, args.config, args.output,
+                    args.source_revision, args.b_command,
+                )
+            else:
+                result = validate_paired_manifest(
+                    args.manifest, args.findings, args.contexts, args.prompt, args.config,
+                )
         else:
             if args.variant == "B" and args.retrieval_contract is not None:
                 raise TriageError("B does not accept a retrieval contract")
             if args.variant == "C" and args.retrieval_contract is None:
                 raise TriageError("C requires --retrieval-contract")
             validate_paired_config(args.config)
+            validate_paired_manifest(
+                args.paired_manifest, args.findings, args.contexts, args.prompt, args.config,
+            )
             result = run_paired(
                 args.findings, args.contexts, args.prompt, args.config, args.run,
                 args.variant, retrieval_contract_path=args.retrieval_contract,
+                paired_manifest_path=args.paired_manifest,
             )
-    except (CorpusError, EvaluationError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
+    except (CorpusError, EvaluationError, PairedManifestError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
         print(f"ERROR={error}", file=sys.stderr)
         return 1
     print(json.dumps(result, indent=2))
