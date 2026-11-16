@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     paired_create.add_argument("--config", type=Path, required=True)
     paired_create.add_argument("--source-revision", required=True)
     paired_create.add_argument("--output", type=Path, required=True)
-    paired_create.add_argument("--b-command", nargs="+", required=True)
+    paired_create.add_argument("--b-command", nargs=argparse.REMAINDER, required=True)
     paired_validate = paired_manifest_commands.add_parser("validate")
     paired_validate.add_argument("--manifest", type=Path, required=True)
     paired_validate.add_argument("--findings", type=Path, required=True)

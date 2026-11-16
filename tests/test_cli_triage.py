@@ -83,7 +83,8 @@ def test_paired_manifest_cli_creates_and_validates(tmp_path: Path) -> None:
     create_args = [
         "paired-manifest", "create", "--findings", str(findings), "--contexts", str(contexts),
         "--prompt", str(prompt), "--config", str(config), "--source-revision", "revision",
-        "--output", str(manifest), "--b-command", "python", "src/main.py", "triage",
+        "--output", str(manifest), "--b-command", "python", "-m", "main", "triage",
+        "--variant", "B", "--paired-manifest", str(manifest), "--run", "output",
     ]
     validate_args = [
         "paired-manifest", "validate", "--manifest", str(manifest), "--findings", str(findings),
@@ -92,3 +93,5 @@ def test_paired_manifest_cli_creates_and_validates(tmp_path: Path) -> None:
 
     assert main(create_args) == 0
     assert main(validate_args) == 0
+    frozen = json.loads(manifest.read_text(encoding="utf-8"))
+    assert frozen["intended_b_command"] == create_args[create_args.index("--b-command") + 1:]
