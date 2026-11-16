@@ -9,6 +9,8 @@ from pathlib import Path
 from context import read as read_contexts
 from neutral_interface import bind_knowledge_schema, render_prompt
 from ollama_client import OllamaError, generate, metadata, running_model
+from paired_manifest import PairedManifestError
+from paired_manifest import validate as validate_paired_manifest
 from sarif import read as read_findings
 from triage_retrieval import build_provider
 from variant_contract import retrieval_failure_row
@@ -84,13 +86,22 @@ def run_paired(
     variant: str,
     retrieval_provider: object = None,
     retrieval_contract_path: Path | None = None,
+    paired_manifest_path: Path | None = None,
 ) -> dict[str, object]:
     """Prepare one neutral paired B/C run and preserve retrieval failures."""
     if output.exists():
         raise TriageError(f"run directory already exists: {output}")
     if variant not in {"B", "C"}:
         raise TriageError("variant must be B or C")
+    if paired_manifest_path is None:
+        raise TriageError("paired manifest is required")
     config, schema, neutral_path = validate_paired_config(config_path)
+    try:
+        paired_manifest = validate_paired_manifest(
+            paired_manifest_path, findings_path, contexts_path, prompt_path, config_path,
+        )
+    except PairedManifestError as error:
+        raise TriageError(str(error)) from error
     try:
         model = metadata(str(config["endpoint"]), str(config["model"]), int(config["timeout_seconds"]))
     except OllamaError as error:
@@ -160,7 +171,7 @@ def run_paired(
     contracts = {"neutral": {"path": str(neutral_path), "sha256": hashlib.sha256(neutral_path.read_bytes()).hexdigest()}}
     if retrieval_contract_path is not None:
         contracts["retrieval"] = {"path": str(retrieval_contract_path), "sha256": hashlib.sha256(retrieval_contract_path.read_bytes()).hexdigest()}
-    manifest = {"status": "completed", "variant": variant, "candidate_count": len(findings), "config": config, "model": model, "inputs": inputs, "contracts": contracts, "raw_responses": "raw", "retrieval_bundle_snapshots": "retrieval-bundles" if variant == "C" else None}
+    manifest = {"status": "completed", "variant": variant, "candidate_count": len(findings), "config": config, "model": model, "inputs": inputs, "contracts": contracts, "paired_manifest": {"path": str(paired_manifest_path), "sha256": hashlib.sha256(paired_manifest_path.read_bytes()).hexdigest(), "source_revision": paired_manifest["source_revision"]}, "raw_responses": "raw", "retrieval_bundle_snapshots": "retrieval-bundles" if variant == "C" else None}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest
 
