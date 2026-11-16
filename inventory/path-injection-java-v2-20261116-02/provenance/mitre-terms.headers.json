@@ -1,0 +1,18 @@
+{
+  "headers": {
+    "Accept-Ranges": "bytes",
+    "Connection": "close",
+    "Content-Security-Policy": "default-src 'self' mitre.org *.mitre.org *.google.com *.withgoogle.com *.googleadservices.com *.google-analytics.com www.googletagmanager.com *.gstatic.com platform.twitter.com syndication.twitter.com www.youtube.com www.youtube-nocookie.com *.osano.com play.vidyard.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' mitre.org *.mitre.org *.google.com *.withgoogle.com *.googleadservices.com *.google-analytics.com www.googletagmanager.com *.gstatic.com platform.twitter.com syndication.twitter.com www.youtube.com www.youtube-nocookie.com *.osano.com play.vidyard.com; style-src 'self' 'unsafe-inline' 'unsafe-eval' mitre.org *.mitre.org *.google.com *.withgoogle.com *.googleadservices.com *.google-analytics.com www.googletagmanager.com *.gstatic.com platform.twitter.com syndication.twitter.com www.youtube.com www.youtube-nocookie.com *.osano.com play.vidyard.com; frame-ancestors 'self'; worker-src blob:",
+    "Content-Type": "text/html",
+    "Date": "Mon, 16 Nov 2026 03:06:56 GMT",
+    "Set-Cookie": "TS01c40944=0126e415d1345da254e3c06af0530b4f814256ee2023df22284592666396d214b2ad2a32c53dad71fe5d064b120af47fbd6ca68213; Path=/; Domain=.cwe.mitre.org",
+    "Strict-Transport-Security": "max-age=15768000; includeSubDomains; preload",
+    "Transfer-Encoding": "chunked",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "SAMEORIGIN",
+    "X-XSS-Protection": "1; mode=block"
+  },
+  "sha256": "c572b605b5753cd67b84d12fc64e9ccbfcde0188cf1332118be04c9996a92c45",
+  "status": 200,
+  "url": "https://cwe.mitre.org/about/termsofuse.html"
+}

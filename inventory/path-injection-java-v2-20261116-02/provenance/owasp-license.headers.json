@@ -1,0 +1,32 @@
+{
+  "headers": {
+    "Accept-Ranges": "bytes",
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "max-age=300",
+    "Connection": "close",
+    "Content-Length": "18637",
+    "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cross-Origin-Resource-Policy": "cross-origin",
+    "Date": "Mon, 16 Nov 2026 03:06:56 GMT",
+    "ETag": "\"6b5148e31632dc00554cc634904e060a28a96dcb59c61fc3f94f181cd47b716a\"",
+    "Expires": "Mon, 16 Nov 2026 03:11:56 GMT",
+    "Source-Age": "0",
+    "Strict-Transport-Security": "max-age=31536000",
+    "Vary": "Authorization,Accept-Encoding",
+    "Via": "1.1 varnish",
+    "X-Cache": "HIT",
+    "X-Cache-Hits": "0",
+    "X-Content-Type-Options": "nosniff",
+    "X-Fastly-Request-ID": "4444394e2d6be4cea8070e54df8c02431182c2c3",
+    "X-Frame-Options": "deny",
+    "X-GitHub-Request-Id": "EC1C:0AD0:99F2FC:B929A5:6AFA6974",
+    "X-Served-By": "cache-sin-wsap440036-SIN",
+    "X-Timer": "S1794798417.678568,VS0,VE286",
+    "X-XSS-Protection": "1; mode=block",
+    "x-github-edge-region": "uksouth"
+  },
+  "sha256": "2b47ecdd5078e948395bc5980226933854228ff688f10d1dd059208be4956084",
+  "status": 200,
+  "url": "https://raw.githubusercontent.com/OWASP/CheatSheetSeries/5f2a48abb76eea3544997eb5229e7cb8b7c275e3/LICENSE.md"
+}

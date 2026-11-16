@@ -1,0 +1,8 @@
+{
+  "license_path": "D:\\tools\\codeql\\LICENSE.md",
+  "license_sha256": "d0d6cfdc857c1e0153bbd2b6f0d4ab42dfc38acec9b97b2f7f55c1f51ffe9fbf",
+  "query_pack": "codeql/java-queries@1.11.10",
+  "query_pack_build_sha": "c6baf479093fafc81d4655dc2014dc583360308e",
+  "query_path": "D:\\tools\\codeql\\qlpacks\\codeql\\java-queries\\1.11.10\\Security\\CWE\\CWE-022\\TaintedPath.md",
+  "query_sha256": "ec4da6ffaea9798c4404a6734da31bca54d7039a04f65f51030153c52ec15601"
+}

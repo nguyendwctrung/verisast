@@ -1,0 +1,15 @@
+{
+  "headers": {
+    "Akamai-GRN": "0.d507f2ab.1794798414.1bd22da1",
+    "Cache-Control": "max-age=16593",
+    "Connection": "close",
+    "Content-Length": "37385",
+    "Content-Type": "text/html",
+    "Date": "Mon, 16 Nov 2026 03:06:54 GMT",
+    "ETag": "\"eecfcbf6a1c45df5d7f903716fe30adb:1730814858.275746\"",
+    "Server": "AkamaiNetStorage"
+  },
+  "sha256": "20f0984a4f4c813d2f656a8e7bd0373c110efbdc119454b8195383cf79439abd",
+  "status": 200,
+  "url": "https://docs.oracle.com/javase/tutorial/essential/io/pathOps.html"
+}
