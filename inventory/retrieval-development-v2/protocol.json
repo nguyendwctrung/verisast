@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "status": "preregistered_not_executed",
+  "purpose": "Independent corpus-v2 development retrieval-quality evaluation only",
+  "corpus": {
+    "corpus_id": "corpus-v2-cc6c2b98fa056ec8",
+    "freeze_directory": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01",
+    "manifest_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/manifest.json",
+    "chunks_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/chunks.jsonl",
+    "documents_path": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/documents.jsonl",
+    "chunks_sha256": "5944b7b5e66e64a25514de56803303fded14589caf7b767eb986a616fc7cbb3e",
+    "documents_sha256": "ee44386d7b1e983bebc96a6169f6bfb483672cd7df41297d5972f204c46a05e6"
+  },
+  "embedding": {
+    "endpoint": "http://127.0.0.1:11434",
+    "model_name": "bge-m3:latest",
+    "model_digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+    "dimension": 1024,
+    "timeout_seconds": 120,
+    "keep_alive": "0s",
+    "truncate": false,
+    "runtime_evidence_path": "artifacts/retrieval-runtime/bge-m3-runtime-20261029T074309Z/model-provenance.json"
+  },
+  "metadata_filter": {
+    "cwe_id": 22,
+    "programming_language": "Java"
+  },
+  "ranking": {
+    "canonical_text": "section_path joined by ' > ' followed by newline and text",
+    "sparse": "BM25",
+    "dense": "cosine_similarity",
+    "fusion": "reciprocal_rank_fusion",
+    "rrf_k": 60,
+    "top_k": 3,
+    "tie_break": "chunk_id_ascending"
+  },
+  "metrics": {
+    "aggregation": "macro_average_over_queries",
+    "primary": ["Hit@1", "Hit@3", "Recall@1", "Recall@3"]
+  },
+  "acceptance": {
+    "minimum_hit_at_3": 1.0,
+    "required_repetitions": 2,
+    "canonical_retrieval_records_must_match": true
+  },
+  "inputs": {
+    "queries_path": "inventory/retrieval-development-v2/queries.jsonl",
+    "relevance_judgments_path": "inventory/retrieval-development-v2/relevance-judgments.jsonl"
+  },
+  "planned_output_layout": "artifacts/rag/retrieval-dev-v2/<run-id>/"
+}
