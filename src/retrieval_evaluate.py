@@ -7,6 +7,7 @@ from typing import Callable
 
 from ollama_client import embed, metadata
 from retrieval import build_retrieval_record, rank_hybrid, write_retrieval_records
+from stability import StabilityError, compare_deterministic_repetitions
 
 
 class EvaluationError(ValueError):
@@ -15,6 +16,41 @@ class EvaluationError(ValueError):
 
 MetadataReader = Callable[[str, str, int], dict[str, object]]
 EmbeddingFunction = Callable[[str, str, list[str], int, str], list[list[object]]]
+
+
+def validate_retrieval_gate(metrics: dict[str, object], required_hit_at_3: float) -> dict[str, object]:
+    """Require the preregistered retrieval threshold before C is authorized."""
+    observed = metrics.get("Hit@3")
+    if not isinstance(observed, (int, float)) or observed < required_hit_at_3:
+        raise EvaluationError(
+            f"Hit@3 gate failed: observed={observed} required={required_hit_at_3}"
+        )
+    return {"status": "passed", "metric": "Hit@3", "observed": observed, "required": required_hit_at_3}
+
+
+def compare_retrieval_runs(first: Path, second: Path) -> dict[str, object]:
+    """Compare two retrieval-record sets after excluding runtime-only fields."""
+    repetitions = [
+        _canonical_retrieval_scores(_read_jsonl(run / "retrieval-records.jsonl"))
+        for run in (first, second)
+    ]
+    try:
+        return compare_deterministic_repetitions(repetitions)
+    except StabilityError as error:
+        raise EvaluationError(str(error)) from error
+
+
+def _canonical_retrieval_scores(value: object) -> object:
+    """Round persisted ranking scores while retaining raw evidence unchanged."""
+    if isinstance(value, dict):
+        return {
+            key: round(item, 12) if key.endswith("_score") and isinstance(item, float)
+            else _canonical_retrieval_scores(item)
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_canonical_retrieval_scores(item) for item in value]
+    return value
 
 
 def load_projected_chunks(chunks_path: Path, documents_path: Path) -> list[dict[str, object]]:
@@ -135,9 +171,18 @@ def run(
         write_retrieval_records(output / "retrieval-records.jsonl", records)
         k_values = _metric_k_values(_required_object(protocol, "metrics"))
         metrics, rows = compute_metrics(judgments, results_by_query, k_values)
+        acceptance = protocol.get("acceptance", {})
+        if not isinstance(acceptance, dict):
+            raise EvaluationError("acceptance must be an object")
+        required_hit_at_3 = acceptance.get("minimum_hit_at_3")
+        gate = None
+        if required_hit_at_3 is not None:
+            if not isinstance(required_hit_at_3, (int, float)):
+                raise EvaluationError("minimum_hit_at_3 must be numeric")
+            gate = validate_retrieval_gate(metrics, float(required_hit_at_3))
         _write_jsonl(output / "per-query-metrics.jsonl", rows)
         (output / "metrics.json").write_text(json.dumps(metrics, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        manifest = {"schema_version": 1, "status": "passed", "created_at": _timestamp(), "query_count": len(queries), "corpus_id": corpus["corpus_id"], "embedding_model_name": model, "embedding_model_digest": digest, "metrics": metrics}
+        manifest = {"schema_version": 1, "status": "passed", "created_at": _timestamp(), "purpose": "development_only", "query_count": len(queries), "corpus_id": corpus["corpus_id"], "embedding_model_name": model, "embedding_model_digest": digest, "metrics": metrics, "gate": gate}
         (output / "manifest.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         return {"status": "passed", "output": str(output), "query_count": len(queries), "metrics": metrics}
     except Exception as error:

@@ -4,7 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from retrieval_evaluate import EvaluationError, compute_metrics, load_projected_chunks, run
+from retrieval_evaluate import (
+    EvaluationError,
+    compare_retrieval_runs,
+    compute_metrics,
+    load_projected_chunks,
+    run,
+    validate_retrieval_gate,
+)
 
 
 def write_jsonl(path: Path, rows: list[dict[str, object]]) -> None:
@@ -109,3 +116,30 @@ def test_runner_snapshots_inputs_and_refuses_overwrite(tmp_path: Path, monkeypat
     assert json.loads((tmp_path / "run" / "metrics.json").read_text(encoding="utf-8"))["Hit@1"] == 1.0
     with pytest.raises(EvaluationError, match="already exists"):
         run(protocol_path, tmp_path / "run")
+
+
+def test_v2_gate_requires_perfect_hit_at_three() -> None:
+    assert validate_retrieval_gate({"Hit@3": 1.0}, 1.0)["status"] == "passed"
+    with pytest.raises(EvaluationError, match="Hit@3 gate failed"):
+        validate_retrieval_gate({"Hit@3": 0.75}, 1.0)
+
+
+def test_retrieval_replay_ignores_timestamps_but_not_ranked_results(tmp_path: Path) -> None:
+    first, second = tmp_path / "first", tmp_path / "second"
+    first.mkdir()
+    second.mkdir()
+    record = {"query_id": "q1", "results": [{"chunk_id": "chunk-1", "final_rank": 1, "sparse_score": 1.0000000000000002}]}
+    write_jsonl(first / "retrieval-records.jsonl", [{**record, "retrieval_timestamp_utc": "one"}])
+    second_record = {"query_id": "q1", "results": [{"chunk_id": "chunk-1", "final_rank": 1, "sparse_score": 1.0000000000000004}]}
+    write_jsonl(second / "retrieval-records.jsonl", [{**second_record, "retrieval_timestamp_utc": "two"}])
+
+    result = compare_retrieval_runs(first, second)
+
+    assert result["status"] == "passed"
+    write_jsonl(second / "changed.jsonl", [])
+    (second / "retrieval-records.jsonl").write_text(
+        json.dumps({"query_id": "q1", "results": [{"chunk_id": "chunk-2", "final_rank": 1, "sparse_score": 1.0}]}) + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(EvaluationError, match="canonical outputs differ"):
+        compare_retrieval_runs(first, second)
