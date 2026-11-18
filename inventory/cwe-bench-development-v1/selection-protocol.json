@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "status": "preregistered_not_executed",
+  "dataset_id": "cwe-bench-java",
+  "purpose": "OD-002 development cohort discovery and selection only",
+  "required_revision_roles": ["buggy", "fixed"],
+  "cohort_target": {
+    "minimum_pairs": 5,
+    "preferred_pairs": 8,
+    "maximum_pairs": 10
+  },
+  "allowed_selection_evidence": [
+    "immutable source availability",
+    "ground-truth file and symbol availability",
+    "CodeQL no-build extraction completion",
+    "target-file extraction coverage",
+    "repository and fix-family diversity",
+    "CWE-group diversity",
+    "JDK and build-system diversity",
+    "documented runtime cost"
+  ],
+  "forbidden_selection_evidence": [
+    "whether CodeQL reports a target finding",
+    "CodeQL true-positive or false-positive outcome",
+    "LLM verdict or explanation",
+    "RAG retrieval or verdict outcome",
+    "held-out metric or label-derived tuning signal"
+  ],
+  "diversity": {
+    "vulnerability_groups": [
+      "path-traversal",
+      "os-command-injection",
+      "cross-site-scripting",
+      "code-injection"
+    ],
+    "prefer_multiple_repositories": true,
+    "prefer_multiple_build_systems": true,
+    "prefer_multiple_jdk_requirements": true,
+    "selection_order": "reviewed candidate inventory order after applying admission and grouping rules"
+  },
+  "grouping": {
+    "repository_family_key": "repository_id",
+    "fix_family_key": "pair_id",
+    "keep_repository_family_in_one_split": true,
+    "keep_fix_family_in_one_split": true
+  },
+  "admission": {
+    "require_clean_buggy_and_fixed_git_worktrees": true,
+    "require_immutable_buggy_and_fixed_commits": true,
+    "require_origin_remote_url": true,
+    "require_ground_truth_file": true,
+    "require_ground_truth_method_or_class": true,
+    "require_codeql_database_completion_for_both_revisions": true,
+    "require_target_file_extracted_for_both_revisions": true,
+    "require_matching_rule_applicable": true
+  },
+  "exclusion_reason_codes": [
+    "SOURCE_UNAVAILABLE",
+    "REVISION_UNRESOLVED",
+    "DIRTY_SOURCE_WORKTREE",
+    "GROUND_TRUTH_INCOMPLETE",
+    "DATABASE_CREATE_FAILED",
+    "TARGET_FILE_NOT_EXTRACTED",
+    "UNSUPPORTED_SOURCE_LAYOUT",
+    "DUPLICATE_REPOSITORY_FAMILY",
+    "DUPLICATE_FIX_FAMILY"
+  ],
+  "prohibited_exclusion_reason_codes": [
+    "NO_CODEQL_FINDING",
+    "LLM_UNCERTAIN",
+    "LLM_FALSE_POSITIVE",
+    "LOW_RETRIEVAL_SCORE"
+  ],
+  "matching": {
+    "evaluation_unit": "target-CVE revision",
+    "require_compatible_cwe": true,
+    "require_ground_truth_file_match": true,
+    "require_primary_or_codeflow_intersection_with_ground_truth_symbol": true,
+    "fixed_revision_scope": "target CWE and corresponding ground-truth location only",
+    "report_pair_accuracy": true
+  },
+  "split_policy": {
+    "current_admission_split": "development",
+    "held_out_execution_authorized": false,
+    "held_out_targets_may_influence_configuration": false,
+    "future_validation_and_held_out_splits_require_separate_preregistration": true
+  },
+  "leakage": {
+    "exclude_selected_CVE_advisories_from_RAG": true,
+    "exclude_selected_patches_and_diffs_from_RAG": true,
+    "exclude_selected_repository_specific_answer_material_from_RAG": true,
+    "exclude_vulnerable_fixed_labels_from_RAG": true
+  },
+  "discovery_output": {
+    "layout": "artifacts/cohort/cwe-bench-discovery-<run-id>/",
+    "records": "candidates.jsonl",
+    "manifest": "manifest.json",
+    "protocol_snapshot": "selection-protocol-snapshot.json"
+  }
+}
