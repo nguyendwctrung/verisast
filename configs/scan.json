@@ -1,6 +1,8 @@
 {
   "codeql": "codeql",
+  "codeql_version": "2.27.0",
   "query_pack": "codeql/java-queries",
+  "query_pack_version": "1.11.10",
   "suite": "codeql/java-queries:codeql-suites/java-security-extended.qls",
   "build_mode": "none",
   "language": "java-kotlin"

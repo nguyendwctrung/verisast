@@ -1,0 +1,38 @@
+{
+  "contract_id": "phase2-4-readiness-v1",
+  "purpose": "development_only",
+  "scanner": {
+    "name": "CodeQL CLI",
+    "version": "2.27.0",
+    "query_pack": "codeql/java-queries",
+    "query_pack_version": "1.11.10",
+    "default_suite": "codeql/java-queries:codeql-suites/java-security-extended.qls",
+    "build_mode": "none",
+    "language": "java-kotlin"
+  },
+  "context": {
+    "before_lines": 20,
+    "after_lines": 20,
+    "maximum_lines": 150,
+    "path_containment_required": true,
+    "flow_locations_included": true
+  },
+  "stability": {
+    "deterministic_repetitions": 2,
+    "llm_repetitions": 3,
+    "llm_mismatch_effective_verdict": "UNCERTAIN",
+    "llm_mismatch_error": "non_reproducible_output",
+    "retrieval_score_canonical_decimal_places": 12
+  },
+  "retrieval_v2": {
+    "corpus_id": "corpus-v2-cc6c2b98fa056ec8",
+    "embedding_model_digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab",
+    "rrf_k": 60,
+    "top_k": 3,
+    "minimum_hit_at_3": 1.0
+  },
+  "held_out_policy": {
+    "execution_authorized": false,
+    "may_influence_prompt_context_corpus_or_retrieval": false
+  }
+}
