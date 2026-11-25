@@ -89,18 +89,37 @@ def _validate_cwe_bench_unit(unit: dict[str, object]) -> dict[str, object]:
         isinstance(prefix, str) and prefix for prefix in path_prefixes
     ):
         raise EvaluationError("CWE-Bench path_prefixes must be a non-empty string list")
+    ranges = unit.get("symbol_ranges")
+    if ranges is not None and (not isinstance(ranges, list) or not ranges or any(
+        not isinstance(item, dict) or not isinstance(item.get("path"), str)
+        or type(item.get("start")) is not int or type(item.get("end")) is not int
+        or item["start"] < 1 or item["end"] < item["start"] for item in ranges
+    )):
+        raise EvaluationError("CWE-Bench symbol_ranges must contain valid path/start/end entries")
     return {**unit, "pair_id": unit.get("pair_id", unit["cve_id"])}
 
 
 def _finding_matches_cwe_bench_unit(finding: dict[str, object], unit: dict[str, object]) -> bool:
     cwes = finding.get("cwes")
     path = finding.get("path")
-    return (
+    flow = finding.get("flow")
+    locations = [(path, finding.get("start"))]
+    if isinstance(flow, list):
+        locations.extend((step.get("path"), step.get("line")) for step in flow if isinstance(step, dict))
+    path_match = (
         isinstance(cwes, list)
         and unit["cwe"] in cwes
-        and isinstance(path, str)
-        and any(path.startswith(prefix) for prefix in unit["path_prefixes"])
+        and any(isinstance(location_path, str) and
+                any(location_path.startswith(prefix) for prefix in unit["path_prefixes"])
+                for location_path, _ in locations)
     )
+    if not path_match:
+        return False
+    ranges = unit.get("symbol_ranges")
+    if ranges is None:
+        return True
+    return any(location_path == item["path"] and type(line) is int and item["start"] <= line <= item["end"]
+               for location_path, line in locations for item in ranges)
 
 
 def _metrics(counts: dict[str, int]) -> dict[str, object]:

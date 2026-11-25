@@ -3,6 +3,19 @@ import pytest
 from evaluate import EvaluationError, score_cwe_bench
 
 
+def test_reviewed_symbol_range_excludes_other_methods_in_same_file() -> None:
+    units = [{"target_id": "project/buggy", "cve_id": "CVE-1", "revision_role": "buggy",
+              "cwe": 22, "path_prefixes": ["src/Vulnerable.java"],
+              "symbol_ranges": [{"path": "src/Vulnerable.java", "start": 20, "end": 30}]}]
+    findings = [{"id": "outside", "target_id": "project/buggy", "cwes": [22],
+                 "path": "src/Vulnerable.java", "start": 80, "flow": []}]
+    result = score_cwe_bench(units, findings, require_pairs=False)
+    assert result["overall"]["fn"] == 1
+    findings[0]["flow"] = [{"path": "src/Vulnerable.java", "line": 25}]
+    result = score_cwe_bench(units, findings, require_pairs=False)
+    assert result["overall"]["tp"] == 1
+
+
 def test_cwe_bench_scores_target_cve_units_separately_from_owasp() -> None:
     units = [
         {"target_id": "plexus:CVE-2022-4244:buggy", "cve_id": "CVE-2022-4244", "revision_role": "buggy", "cwe": 22, "path_prefixes": ["src/main/java/"]},
