@@ -6,6 +6,8 @@ from pathlib import Path
 from context import build as build_context
 from context import write as write_context
 from corpus import CorpusError, ingest
+from cwe_bench_materialize import MaterializationError
+from cwe_bench_materialize import materialize as materialize_cwe_bench
 from cwe_bench_inventory import InventoryError
 from cwe_bench_inventory import discover as discover_cwe_bench
 from evaluate import score
@@ -102,6 +104,11 @@ def main(argv: list[str] | None = None) -> int:
     cwe_bench_inventory.add_argument("--dataset-root", type=Path, required=True)
     cwe_bench_inventory.add_argument("--protocol", type=Path, required=True)
     cwe_bench_inventory.add_argument("--output", type=Path, required=True)
+    cwe_bench_materialize = cwe_bench_commands.add_parser("materialize")
+    cwe_bench_materialize.add_argument("--snapshot", type=Path, required=True)
+    cwe_bench_materialize.add_argument("--shortlist", type=Path, required=True)
+    cwe_bench_materialize.add_argument("--dataset-root", type=Path, required=True)
+    cwe_bench_materialize.add_argument("--output", type=Path, required=True)
 
     args = parser.parse_args(argv)
     try:
@@ -131,7 +138,12 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "retrieval":
             result = run_retrieval_evaluation(args.protocol, args.run)
         elif args.command == "cwe-bench":
-            result = discover_cwe_bench(args.dataset_root, args.protocol, args.output)
+            if args.cwe_bench_command == "inventory":
+                result = discover_cwe_bench(args.dataset_root, args.protocol, args.output)
+            else:
+                result = materialize_cwe_bench(
+                    args.snapshot, args.shortlist, args.dataset_root, args.output,
+                )
         elif args.command == "paired-manifest":
             if args.paired_manifest_command == "create":
                 result = create_paired_manifest(
@@ -156,7 +168,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.variant, retrieval_contract_path=args.retrieval_contract,
                 paired_manifest_path=args.paired_manifest,
             )
-    except (CorpusError, EvaluationError, InventoryError, PairedManifestError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
+    except (CorpusError, EvaluationError, InventoryError, MaterializationError, PairedManifestError, ScanError, TriageError, ValueError, OSError, json.JSONDecodeError) as error:
         print(f"ERROR={error}", file=sys.stderr)
         return 1
     print(json.dumps(result, indent=2))
