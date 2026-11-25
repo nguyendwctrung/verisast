@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "status": "preregistered_acquisition_shortlist",
+  "purpose": "OD-002 source acquisition only; not a selected or admitted cohort",
+  "selection_basis": [
+    "complete official project and fix metadata",
+    "four-CWE coverage",
+    "repository diversity",
+    "upstream build and JDK diversity",
+    "bounded acquisition cost with reserve targets"
+  ],
+  "snapshot": {
+    "repository": "https://github.com/iris-sast/cwe-bench-java.git",
+    "revision": "afe0ebd0adc237abb46255f9cd479b1d71819136",
+    "project_count": 120,
+    "metadata_sha256": {
+      "project_info.csv": "1666d037842a4c28506bbe3de731ae89f9e276d6f2d568e8a155f6fef36e3797",
+      "fix_info.csv": "a73d4b8974e574b4a0959524a09532b642b0aac4831f6f72b8ceb5796532e0cd",
+      "build_info.csv": "8b46190cf5f5f35cbb873df8ba073dcf663b2a37d5fa8473719ab80a26e3e9e9"
+    }
+  },
+  "project_slugs": [
+    "codehaus-plexus__plexus-utils_CVE-2022-4244_3.0.23",
+    "testng-team__testng_CVE-2022-4065_7.5",
+    "DSpace__DSpace_CVE-2016-10726_4.4",
+    "apache__activemq_CVE-2014-3576_5.10.1",
+    "x-stream__xstream_CVE-2013-7285_1.4.6",
+    "OWASP__json-sanitizer_CVE-2020-13973_1.2.0",
+    "hibernate__hibernate-validator_CVE-2019-10219_6.0.17.Final",
+    "asf__commons-text_CVE-2022-42889_1.9",
+    "jmrozanec__cron-utils_CVE-2021-41269_9.1.5",
+    "spring-projects__spring-framework_CVE-2022-22965_5.2.19.RELEASE"
+  ],
+  "final_cohort_selected": false,
+  "codeql_feasibility_executed": false,
+  "held_out_execution_authorized": false
+}
