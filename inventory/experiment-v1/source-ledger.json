@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "purpose": "source_attribution_and_preflight_not_result_evidence",
+  "datasets": [
+    {
+      "id": "owasp-benchmark-java-v1.2",
+      "upstream_url": "https://github.com/OWASP-Benchmark/BenchmarkJava.git",
+      "revision": "8b67a88d73b2594570fc21150705283de884620b",
+      "local_manifest": "datasets/manifests/owasp-benchmark-java-v1.2.json",
+      "ground_truth": "expectedresults-1.2.csv",
+      "ground_truth_sha256": "f0311c850dea7f15125113f7cfdbd7ad612d7f5951c7331584f6981b6ae2d630",
+      "license": "GPL-2.0",
+      "local_audit_status": "passed"
+    },
+    {
+      "id": "cwe-bench-java-120",
+      "upstream_url": "https://github.com/iris-sast/cwe-bench-java.git",
+      "metadata_guide_url": "https://github.com/iris-sast/iris/blob/v2/data/contributing_cwe_bench_java.md",
+      "revision": "afe0ebd0adc237abb46255f9cd479b1d71819136",
+      "project_info_sha256": "1666d037842a4c28506bbe3de731ae89f9e276d6f2d568e8a155f6fef36e3797",
+      "fix_info_sha256": "a73d4b8974e574b4a0959524a09532b642b0aac4831f6f72b8ceb5796532e0cd",
+      "build_info_sha256": "8b46190cf5f5f35cbb873df8ba073dcf663b2a37d5fa8473719ab80a26e3e9e9",
+      "metadata_repository_license": "MIT",
+      "metadata_repository_license_sha256": "40adf5e8cb80a0b782e039f8cd93011db6645885eb9cb283b28be356f07b259a",
+      "locally_materialized_pairs": 10,
+      "ground_truth_review_status": "pending",
+      "cohort_status": "pending_OD-002"
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "corpus-v2-cc6c2b98fa056ec8",
+      "source_inventory": "inventory/path-injection-java-v2-20261116-02/",
+      "retrieval_contract": "inventory/variant-contracts/variant-c-retrieval-bundle-v2.json",
+      "supported_cwe": [22],
+      "source_provenance": "artifacts/rag/freeze/corpus-v2-path-injection-java-20261116-01/manifest.json",
+      "development_retrieval_protocol": "inventory/retrieval-development-v2/protocol.json",
+      "scope_limit": "CWE-22 development retrieval only; other CWEs require admitted sources and contracts"
+    }
+  ],
+  "usage_metric_reference": "https://github.com/ollama/ollama/blob/main/docs/api/usage.mdx"
+}

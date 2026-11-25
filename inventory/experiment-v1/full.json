@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "mode": "full",
+  "purpose": "pending_OD-002_OD-006",
+  "owasp": {
+    "dataset_id": "owasp-benchmark-java-v1.2",
+    "source_url": "https://github.com/OWASP-Benchmark/BenchmarkJava.git",
+    "commit": "8b67a88d73b2594570fc21150705283de884620b",
+    "labels_sha256": "f0311c850dea7f15125113f7cfdbd7ad612d7f5951c7331584f6981b6ae2d630",
+    "expected_count": 2740
+  },
+  "cwe_bench": {
+    "dataset_id": "cwe-bench-java",
+    "source_url": "https://github.com/iris-sast/cwe-bench-java.git",
+    "snapshot_commit": "afe0ebd0adc237abb46255f9cd479b1d71819136",
+    "project_info_sha256": "1666d037842a4c28506bbe3de731ae89f9e276d6f2d568e8a155f6fef36e3797",
+    "fix_info_sha256": "a73d4b8974e574b4a0959524a09532b642b0aac4831f6f72b8ceb5796532e0cd",
+    "build_info_sha256": "8b46190cf5f5f35cbb873df8ba073dcf663b2a37d5fa8473719ab80a26e3e9e9",
+    "expected_pair_count": 120
+  }
+}

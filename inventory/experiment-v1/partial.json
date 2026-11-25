@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "mode": "partial",
+  "purpose": "development_only",
+  "selection_status": "preregistered_pending_OD-002_review",
+  "owasp": {
+    "dataset_id": "owasp-benchmark-java-v1.2",
+    "source_url": "https://github.com/OWASP-Benchmark/BenchmarkJava.git",
+    "commit": "8b67a88d73b2594570fc21150705283de884620b",
+    "labels_sha256": "f0311c850dea7f15125113f7cfdbd7ad612d7f5951c7331584f6981b6ae2d630",
+    "expected_count": 44,
+    "selection_rule": "Two lowest testcase IDs per CWE and label; freeze before new CodeQL/LLM outcomes",
+    "selected_ids": {
+      "22": ["BenchmarkTest00001", "BenchmarkTest00002", "BenchmarkTest00063", "BenchmarkTest00064"],
+      "78": ["BenchmarkTest00006", "BenchmarkTest00007", "BenchmarkTest00051", "BenchmarkTest00090"],
+      "79": ["BenchmarkTest00013", "BenchmarkTest00014", "BenchmarkTest00147", "BenchmarkTest00151"],
+      "89": ["BenchmarkTest00008", "BenchmarkTest00018", "BenchmarkTest00052", "BenchmarkTest00104"],
+      "90": ["BenchmarkTest00012", "BenchmarkTest00021", "BenchmarkTest00138", "BenchmarkTest00139"],
+      "327": ["BenchmarkTest00005", "BenchmarkTest00019", "BenchmarkTest00054", "BenchmarkTest00058"],
+      "328": ["BenchmarkTest00003", "BenchmarkTest00029", "BenchmarkTest00009", "BenchmarkTest00022"],
+      "330": ["BenchmarkTest00023", "BenchmarkTest00066", "BenchmarkTest00010", "BenchmarkTest00042"],
+      "501": ["BenchmarkTest00004", "BenchmarkTest00031", "BenchmarkTest00097", "BenchmarkTest00099"],
+      "614": ["BenchmarkTest00087", "BenchmarkTest00169", "BenchmarkTest00016", "BenchmarkTest00088"],
+      "643": ["BenchmarkTest00207", "BenchmarkTest00442", "BenchmarkTest00116", "BenchmarkTest00117"]
+    }
+  },
+  "cwe_bench": {
+    "dataset_id": "cwe-bench-java",
+    "source_url": "https://github.com/iris-sast/cwe-bench-java.git",
+    "snapshot_commit": "afe0ebd0adc237abb46255f9cd479b1d71819136",
+    "project_info_sha256": "1666d037842a4c28506bbe3de731ae89f9e276d6f2d568e8a155f6fef36e3797",
+    "expected_pair_count": 4,
+    "selection_rule": "One acquisition-shortlist pair from each of four CWE groups; keep both roles together",
+    "selected_slugs": [
+      "codehaus-plexus__plexus-utils_CVE-2022-4244_3.0.23",
+      "apache__activemq_CVE-2014-3576_5.10.1",
+      "OWASP__json-sanitizer_CVE-2020-13973_1.2.0",
+      "asf__commons-text_CVE-2022-42889_1.9"
+    ]
+  }
+}
