@@ -13,7 +13,7 @@ def aggregate_triage_runs(run_directories: list[Path], output: Path) -> dict[str
         raise StabilityError(f"triage stability output already exists: {output}")
     per_run = [_load_run(path) for path in run_directories]
     candidate_sets = [set(rows) for rows in per_run]
-    if not candidate_sets[0] or any(candidate_set != candidate_sets[0] for candidate_set in candidate_sets[1:]):
+    if any(candidate_set != candidate_sets[0] for candidate_set in candidate_sets[1:]):
         raise StabilityError("triage runs do not contain the same candidate set")
     aggregate_rows = []
     for candidate_id in sorted(candidate_sets[0]):

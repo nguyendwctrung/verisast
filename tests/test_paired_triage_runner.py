@@ -62,6 +62,8 @@ def test_c_runner_writes_validated_retrieval_evidence(tmp_path: Path) -> None:
     assert result["variant"] == "C"
     assert request["retrieved_knowledge"] == [{"knowledge_id": "chunk-v1:one"}]
     assert (tmp_path / "c-run" / "retrieval-records.jsonl").exists()
+    verdict = json.loads((tmp_path / "c-run" / "verdicts.jsonl").read_text(encoding="utf-8"))
+    assert verdict["retrieval_seconds"] >= 0
 
 
 def test_c_runner_converts_retrieval_failure_to_uncertain(tmp_path: Path) -> None:
@@ -139,6 +141,15 @@ def test_runner_rejects_model_digest_mismatch(tmp_path: Path, monkeypatch) -> No
         run_paired(findings, contexts, prompt, config, tmp_path / "run", "B", None, paired_manifest_path=manifest)
 
 
+def test_runner_rejects_unimplemented_inference_provider(tmp_path: Path) -> None:
+    findings, contexts, prompt, config, manifest = _inputs(tmp_path)
+    config_data = json.loads(config.read_text(encoding="utf-8"))
+    config_data["provider"] = "future-api"
+    config.write_text(json.dumps(config_data), encoding="utf-8")
+    with pytest.raises(TriageError, match="provider"):
+        run_paired(findings, contexts, prompt, config, tmp_path / "run", "B", paired_manifest_path=manifest)
+
+
 def test_runner_rejects_missing_neutral_provenance_before_creating_output(tmp_path: Path) -> None:
     findings, contexts, prompt, config, manifest = _inputs(tmp_path)
     config_data = json.loads(config.read_text(encoding="utf-8"))
@@ -159,3 +170,20 @@ def test_runner_rejects_changed_manifest_input_before_creating_output(tmp_path: 
         run_paired(findings, contexts, prompt, config, tmp_path / "run", "B", None, paired_manifest_path=manifest)
 
     assert not (tmp_path / "run").exists()
+
+
+def test_c_runner_selects_retrieval_contract_by_cwe(tmp_path: Path, monkeypatch) -> None:
+    findings, contexts, prompt, config, manifest = _inputs(tmp_path)
+    contract = tmp_path / "cwe-22.json"
+    contract.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr("triage.build_provider", lambda path: (
+        lambda finding, context: {"knowledge_items": [{"knowledge_id": "chunk-v1:one"}]}
+    ))
+
+    result = run_paired(
+        findings, contexts, prompt, config, tmp_path / "c-mapped", "C",
+        paired_manifest_path=manifest, retrieval_contract_paths={22: contract},
+    )
+
+    assert result["contracts"]["retrieval_by_cwe"]["22"]["path"] == str(contract)
+    assert json.loads((tmp_path / "c-mapped" / "requests" / "candidate-1.json").read_text(encoding="utf-8"))["retrieved_knowledge"]

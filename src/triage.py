@@ -29,6 +29,8 @@ def validate_paired_config(config_path: Path) -> tuple[dict[str, object], dict[s
         raise TriageError(f"invalid paired triage configuration: {error}") from error
     if not isinstance(config, dict) or config.get("interface") != "neutral-triage":
         raise TriageError("neutral triage configuration is required")
+    if config.get("provider", "ollama") != "ollama":
+        raise TriageError("inference provider is not implemented")
     string_fields = ("schema", "neutral_contract", "endpoint", "model", "model_digest", "keep_alive")
     integer_fields = ("timeout_seconds", "max_response_tokens", "context_tokens")
     missing = [name for name in string_fields if not isinstance(config.get(name), str) or not config[name]]
@@ -87,6 +89,7 @@ def run_paired(
     retrieval_provider: object = None,
     retrieval_contract_path: Path | None = None,
     paired_manifest_path: Path | None = None,
+    retrieval_contract_paths: dict[int, Path] | None = None,
 ) -> dict[str, object]:
     """Prepare one neutral paired B/C run and preserve retrieval failures."""
     if output.exists():
@@ -109,9 +112,20 @@ def run_paired(
     if model.get("model_digest") != config["model_digest"]:
         raise TriageError("local model digest does not match configuration")
     if variant == "C" and retrieval_provider is None:
-        if retrieval_contract_path is None:
+        if retrieval_contract_paths:
+            providers = {cwe: build_provider(path) for cwe, path in retrieval_contract_paths.items()}
+
+            def routed_provider(finding: dict[str, object], context: dict[str, object]) -> dict[str, object]:
+                compatible = [cwe for cwe in finding.get("cwes", []) if cwe in providers]
+                if len(compatible) != 1:
+                    raise TriageError("candidate requires exactly one admitted CWE retrieval contract")
+                return providers[compatible[0]](finding, context)
+
+            retrieval_provider = routed_provider
+        elif retrieval_contract_path is not None:
+            retrieval_provider = build_provider(retrieval_contract_path)
+        else:
             raise TriageError("C requires a retrieval contract path")
-        retrieval_provider = build_provider(retrieval_contract_path)
     template = prompt_path.read_text(encoding="utf-8")
     findings, contexts = read_findings(findings_path), read_contexts(contexts_path)
     output.mkdir(parents=True)
@@ -132,7 +146,9 @@ def run_paired(
             rows.append({"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": "missing_context"})
             continue
         knowledge = []
+        retrieval_seconds = None
         if variant == "C":
+            retrieval_started = time.monotonic()
             try:
                 if not callable(retrieval_provider):
                     raise TriageError("C requires a retrieval provider")
@@ -140,10 +156,12 @@ def run_paired(
                 if not isinstance(bundle, dict) or not isinstance(bundle.get("knowledge_items"), list) or not bundle["knowledge_items"]:
                     raise TriageError("C retrieval provider returned an invalid bundle")
                 knowledge = bundle["knowledge_items"]
+                retrieval_seconds = round(time.monotonic() - retrieval_started, 6)
                 retrieval_rows.append({"candidate_id": candidate_id, "bundle": bundle})
                 (bundles_dir / f"{candidate_id}.json").write_text(json.dumps(bundle, indent=2, sort_keys=True), encoding="utf-8")
             except Exception as error:
                 row = _retrieval_failure(candidate_id, str(error))
+                row["retrieval_seconds"] = round(time.monotonic() - retrieval_started, 6)
                 rows.append(row)
                 retrieval_errors.append(row)
                 continue
@@ -160,9 +178,11 @@ def run_paired(
             line_ids = {str(line["id"]) for line in context["lines"] if isinstance(line, dict) and isinstance(line.get("id"), str)}
             knowledge_ids = {str(item["knowledge_id"]) for item in knowledge if isinstance(item, dict) and isinstance(item.get("knowledge_id"), str)}
             verdict = check(str(decoded["response"]), line_ids, knowledge_ids, guards)
-            rows.append({"candidate_id": candidate_id, "effective_verdict": verdict.effective, "reported_verdict": verdict.reported, "error": verdict.error})
+            rows.append({"candidate_id": candidate_id, "effective_verdict": verdict.effective, "reported_verdict": verdict.reported, "error": verdict.error,
+                         "retrieval_seconds": retrieval_seconds})
         except OllamaError as error:
-            rows.append({"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": f"transport:{error}"})
+            rows.append({"candidate_id": candidate_id, "effective_verdict": "UNCERTAIN", "error": f"transport:{error}",
+                         "retrieval_seconds": retrieval_seconds})
     (output / "verdicts.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
     if variant == "C":
         (output / "retrieval-records.jsonl").write_text("".join(json.dumps(row) + "\n" for row in retrieval_rows), encoding="utf-8")
@@ -171,6 +191,11 @@ def run_paired(
     contracts = {"neutral": {"path": str(neutral_path), "sha256": hashlib.sha256(neutral_path.read_bytes()).hexdigest()}}
     if retrieval_contract_path is not None:
         contracts["retrieval"] = {"path": str(retrieval_contract_path), "sha256": hashlib.sha256(retrieval_contract_path.read_bytes()).hexdigest()}
+    if retrieval_contract_paths:
+        contracts["retrieval_by_cwe"] = {
+            str(cwe): {"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+            for cwe, path in sorted(retrieval_contract_paths.items())
+        }
     manifest = {"status": "completed", "variant": variant, "candidate_count": len(findings), "config": config, "model": model, "inputs": inputs, "contracts": contracts, "paired_manifest": {"path": str(paired_manifest_path), "sha256": hashlib.sha256(paired_manifest_path.read_bytes()).hexdigest(), "source_revision": paired_manifest["source_revision"]}, "raw_responses": "raw", "retrieval_bundle_snapshots": "retrieval-bundles" if variant == "C" else None}
     (output / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     return manifest

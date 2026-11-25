@@ -7,6 +7,18 @@ from stability import StabilityError
 from triage_stability import aggregate_triage_runs
 
 
+def test_zero_candidate_runs_are_stably_empty(tmp_path: Path) -> None:
+    runs = []
+    for index in (1, 2, 3):
+        path = tmp_path / f"empty-{index}"
+        path.mkdir()
+        (path / "verdicts.jsonl").write_text("", encoding="utf-8")
+        runs.append(path)
+    result = aggregate_triage_runs(runs, tmp_path / "aggregate")
+    assert result["candidate_count"] == 0
+    assert result["gate"]["status"] == "passed"
+
+
 def _run(path: Path, source_lines: list[str]) -> None:
     (path / "raw").mkdir(parents=True)
     (path / "verdicts.jsonl").write_text(json.dumps({

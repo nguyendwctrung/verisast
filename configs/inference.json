@@ -1,0 +1,22 @@
+{
+  "interface": "neutral-triage",
+  "provider": "ollama",
+  "knowledge_slot_max_items": 3,
+  "neutral_contract": "../inventory/variant-contracts/neutral-triage-interface.json",
+  "endpoint": "http://127.0.0.1:11434",
+  "model": "qwen2.5-coder:7b-instruct-q4_K_M",
+  "model_digest": "dae161e27b0e90dd1856c8bb3209201fd6736d8eb66298e75ed87571486f4364",
+  "schema": "../schemas/verdict.json",
+  "temperature": 0,
+  "timeout_seconds": 120,
+  "max_response_tokens": 512,
+  "context_tokens": 3072,
+  "keep_alive": "10m",
+  "server_environment": {
+    "OLLAMA_NUM_PARALLEL": "1",
+    "OLLAMA_CONTEXT_LENGTH": "3072",
+    "OLLAMA_FLASH_ATTENTION": "1",
+    "OLLAMA_KV_CACHE_TYPE": "q8_0",
+    "LLAMA_ARG_FIT_TARGET": "512"
+  }
+}
